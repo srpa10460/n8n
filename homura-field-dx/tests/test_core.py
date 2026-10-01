@@ -227,6 +227,14 @@ class ApprovalBinding(unittest.TestCase):
         self.assertIsNotNone(q.current_approval())
 
 
+class EngineView(unittest.TestCase):
+    def test_spec_source_not_overwritten_by_measurement_source(self):
+        from hoa_field.engine import call
+        p = build_project(); st = {"catalog": p.catalog.to_dict(), "project": p.to_dict()}
+        dims = call("detail", st, {})["result"]["detail"]["instances"][0]["dims"]
+        self.assertTrue(all(d["source"] == "client-defined" and d["meas_source"] == "MEASURED" for d in dims), dims[0])
+
+
 class PhotoRules(unittest.TestCase):
     def test_same_photo_cannot_be_attached_twice_to_one_object(self):
         p = build_project(complete=False)

@@ -50,7 +50,7 @@ def detail(cat: Catalog, p: Project) -> dict:
             m = inst.measurements.get(s.key)
             dims.append({**_j(asdict(s)), "state": state, "why": why,
                          "mm": str(m.mm) if m else None, "input": m.original_input if m else None,
-                         "source": m.source.value if m else None, "by": m.measured_by if m else None})
+                         "meas_source": m.source.value if m else None, "by": m.measured_by if m else None})
         insts.append({
             "object_id": inst.object_id, "label": inst.label, "definition": {
                 "id": d.definition_id, "version": d.version, "latest_version": cat.get(inst.definition_id).version,

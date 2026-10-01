@@ -65,7 +65,7 @@ def main():
     errors = []
 
     def launch(profile=prof):
-        ctx = pw.chromium.launch_persistent_context(str(profile), executable_path=CHROME, args=["--no-sandbox"], viewport={"width": 1280, "height": 900}, accept_downloads=True)
+        ctx = pw.chromium.launch_persistent_context(str(profile), executable_path=CHROME, args=["--no-sandbox"], viewport={"width": int(os.environ.get("E2E_WIDTH", "960")), "height": 900}, accept_downloads=True)
         pg = ctx.pages[0] if ctx.pages else ctx.new_page()
         pg.on("pageerror", lambda e: errors.append(str(e)))
         if DEBUG:
@@ -113,6 +113,7 @@ def main():
 
         # ---------- 3. offline work: project, objects, measurements, photos, annotations, review, export
         pg.fill("#np-id", "P-0001"); pg.click("#np-go"); expect(pg.locator("#msg")).to_contain_text("端末に保存済み")
+        shot("09_project_created")
         tab("objects")
         for oid, d, lab in (("O-VAN", "vanity", "洗面台"), ("O-WCB", "wall-cabinet", "吊戸棚"), ("O-WSH", "washer", "洗濯機")):
             pg.fill("#o-id", oid); pg.select_option("#o-def", d); pg.fill("#o-label", lab); pg.click("#o-go")
@@ -121,6 +122,7 @@ def main():
             r = pg.locator(f"tr[data-obj={oid}]"); r.locator("[data-p=x]").fill(x); r.locator("[data-p=y]").fill(y); r.locator("[data-p=z]").fill(z)
             r.get_by_role("button", name="配置").click(); expect(pg.locator("#msg")).to_contain_text("配置しました")
         place("O-VAN", "0", "0"); place("O-WCB", "0", "0", "1500"); place("O-WSH", "1000", "0")
+        shot("11a_offline_objects")
         tab("dims")
         def measure(oid, key, v, unit="mm", src="MEASURED"):
             r = pg.locator(f"section[data-obj={oid}] tr[data-key={key}]"); r.locator("[data-m=v]").fill(v); r.locator("[data-m=u]").select_option(unit)
@@ -144,11 +146,15 @@ def main():
         check("auto-draw notice present", "未実装" in pg.locator("#no-auto").inner_text())
         shot("12_offline_photos")
         tab("check"); expect(pg.locator("#val-ok")).to_be_visible(); expect(pg.locator("#ov")).to_contain_text("PASS")
+        shot("13a_offline_check")
         tab("preview"); pg.wait_for_function("document.querySelector('#plan-img').naturalWidth>0"); shot("13_offline_preview")
         tab("review"); ver = int(pg.inner_text("#rv-ver")[1:]); hsh = pg.inner_text("#rv-hash")
         pg.click("#rv-submit"); expect(pg.locator("#ap-go")).to_be_visible()
         pg.fill("#ap-name", "Dev Tester"); pg.click("#ap-go"); expect(pg.locator("#err")).to_contain_text("confirmations")
+        tab("dims"); tab("review")      # leave the intentional error behind so the manual screenshot is clean
+        pg.fill("#ap-name", "Dev Tester")
         for c in pg.locator("[data-cf]").all(): c.check()
+        shot("14a_review_before_approve")
         pg.click("#ap-go"); expect(pg.locator("#msg")).to_contain_text("承認しました")
         check("dev-simulated approval labelled", "開発模擬" in pg.locator("header").inner_text())
         shot("14_offline_approved")
@@ -156,6 +162,7 @@ def main():
         mhref = pg.locator("#ex-list a").evaluate_all("els=>els.find(e=>e.download.endsWith('manifest.json')).href")
         man = json.loads(pg.evaluate("u=>fetch(u).then(r=>r.text())", mhref))
         check("offline export manifest approved + hash", man["approved"] and man["content_hash"] == hsh, man.get("content_hash"))
+        shot("14b_offline_export")
         tab("sync")
         check("sync button disabled offline with 接続後に処理", pg.locator("[data-send=P-0001]").is_disabled() and "接続後に処理" in pg.inner_text("#sync-table"))
         check("status: 端末保存済み + 未送信", "端末保存済み" in pg.inner_text("#sync-table") and "未送信" in pg.inner_text("#sync-table"))

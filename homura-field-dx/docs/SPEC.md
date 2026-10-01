@@ -2,7 +2,7 @@
 
 Status: DRAFT working spec for development. Not promoted to any Canonical / SSOT.
 Source of every requirement below: the task instructions given by 伊佐 in the originating Claude Code session (2026-10-01), i.e. "HOMURA Interior Field DX: 開発・制作指示", the follow-up "CHECKPOINT-001から続行", the "オフライン現場作業" addition and the handoff request.
-NOT used as a source (original text was NOT obtainable in this repository or session): KC-HAO-HOA-001, SC-HAO-HOAP-001, GC-HAO-OUTCOME-001. Nothing in this repo is derived from those IDs. If they are supplied later, diff them against this file; do not assume they agree.
+NOT used as a source (original text was NOT obtainable: searched the repository, the sandbox filesystem for md/txt/json/pdf containing the IDs, and Google Drive full-text/title search - no hits): KC-HAO-HOA-001, SC-HAO-HOAP-001, GC-HAO-OUTCOME-001. Nothing in this repo is derived from those IDs. If they are supplied later, diff them against this file; do not assume they agree.
 
 ## 1. Roles
 

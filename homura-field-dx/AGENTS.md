@@ -19,8 +19,8 @@ The originals of KC-HAO-HOA-001, SC-HAO-HOAP-001, GC-HAO-OUTCOME-001 are NOT in 
 
 ## How to verify (run before and after any change)
 - One-time env: `./scripts/setup_dev_env.sh` (creates `.venv`, installs `requirements-dev.txt`, vendors Pyodide). Needs network once.
-- Everything: `./scripts/run_all_tests.sh` (unit/interference via stdlib `unittest`, then browser E2E `tests/e2e_offline.py` with Chromium). Env overrides: `HOA_PY` (python with playwright+pymupdf), `HOA_CHROME` (Chromium binary; default is the sandbox's `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`).
-- Unit only (no deps): `python3 -m unittest discover -s tests -v` (45 tests at CHECKPOINT-002).
+- Everything: `./scripts/run_all_tests.sh` (stdlib `unittest`; browser E2E `tests/e2e_offline.py` with Chromium; Blender build via bpy; manual PDF build + QA). bpy needs OS libs listed in the script header (apt: libegl1 etc.). Env overrides: `HOA_PY` (python with playwright+pymupdf), `HOA_CHROME` (Chromium binary; default is the sandbox's `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`).
+- Unit only (no deps): `python3 -m unittest discover -s tests -v` (58 tests at CHECKPOINT-002).
 - Run the app: `HOA_DEV_AUTH=1 PYTHONPATH=src python3 -m hoa_field.server 8765` then open http://127.0.0.1:8765/ (service workers need localhost or HTTPS). Data dir `./data` (git-ignored) or `$HOA_DATA`.
 - Visual checks: render screens with the E2E (`docs/screens/*.png`) and LOOK at them; two real defects (overlapping labels, missing closing brace in the UI) were found only by rendering/running.
 - Report test counts AND what the browser actually completed. Do not call a mock/plan "done". Keep implemented / verified / unverified / BLOCKED separate.

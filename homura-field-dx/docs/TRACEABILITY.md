@@ -21,4 +21,9 @@ Paths relative to project root `homura-field-dx/`. "E2E:" names are the `check(.
 | OFF-7 | db.js; sync.js export/importBackup; server.py token | E2E: auth expired; quota x4; backup file written; import ... new profile | docs/screens/20_auth_expired.png, 23_backup_imported.png |
 | OFF-9 | tests/e2e_offline.py | whole file | evidence/e2e_offline/results.json |
 
-Un-mapped (no code/test yet): OFF-8, OFF-10, B-1, B-2, DOC-1, VID-1, PAY-1, GRD-1, FLOW-2, CON-1, INT-4.
+| B-1,B-2 | src/hoa_field/blender_build.py (bpy), export.py (snapshot.json, manifest geometry) | tests/test_blender_guards.py; run `python -m hoa_field.blender_build` (11 in-Blender checks in blender_report.json) | evidence/blender/{still.png,still_derived.png,orbit.mp4,model.blend,blender_report.json} |
+| DOC-1 | scripts/build_manual.py, scripts/qa_manual.py | qa_manual.py (18 checks) | docs/manual/HOA_Field_DX_Manual.pdf, evidence/manual_qa.json |
+| VID-1 | - | - | docs/pr_video/storyboard.md (plan only) |
+| PAY-1 | src/hoa_field/billing_sim.py | tests/test_billing_sim.py | docs/commercial/payment_providers.md, docs/commercial/pricing_draft.md |
+
+Un-mapped (no code/test yet): OFF-8, OFF-10, GRD-1, FLOW-2, CON-1, INT-4, live UI recording for VID-1, real provider integration for PAY-1.

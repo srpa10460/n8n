@@ -1,3 +1,15 @@
+test_canceled_keeps_access_until_period_end_only (test_billing_sim.Billing.test_canceled_keeps_access_until_period_end_only) ... ok
+test_duplicate_event_processed_once (test_billing_sim.Billing.test_duplicate_event_processed_once) ... ok
+test_grace_days_is_required (test_billing_sim.Billing.test_grace_days_is_required) ... ok
+test_out_of_order_events_converge_to_authoritative_state (test_billing_sim.Billing.test_out_of_order_events_converge_to_authoritative_state) ... ok
+test_payment_failure_beyond_grace_denied (test_billing_sim.Billing.test_payment_failure_beyond_grace_denied) ... ok
+test_recovery_after_failure (test_billing_sim.Billing.test_recovery_after_failure) ... ok
+test_stale_state_never_regresses (test_billing_sim.Billing.test_stale_state_never_regresses) ... ok
+test_unknown_status_denied (test_billing_sim.Billing.test_unknown_status_denied) ... ok
+test_zero_grace_denies_immediately_after_period (test_billing_sim.Billing.test_zero_grace_denies_immediately_after_period) ... ok
+test_approved_ok (test_blender_guards.Guards.test_approved_ok) ... ok
+test_tampered_snapshot_refused (test_blender_guards.Guards.test_tampered_snapshot_refused) ... ok
+test_unapproved_refused (test_blender_guards.Guards.test_unapproved_refused) ... ok
 test_approve_and_hash_bound (test_core.Approval.test_approve_and_hash_bound) ... ok
 test_change_after_approval_invalidates (test_core.Approval.test_change_after_approval_invalidates) ... ok
 test_fail_cannot_be_approved_even_with_waiver (test_core.Approval.test_fail_cannot_be_approved_even_with_waiver) ... ok
@@ -12,6 +24,7 @@ test_client_can_add_definition_but_bad_ones_rejected (test_core.Catalog_.test_cl
 test_published_version_immutable_and_unknown (test_core.Catalog_.test_published_version_immutable_and_unknown) ... ok
 test_save_load_roundtrip (test_core.Catalog_.test_save_load_roundtrip) ... ok
 test_version_pinning_survives_catalog_update (test_core.Catalog_.test_version_pinning_survives_catalog_update) ... ok
+test_spec_source_not_overwritten_by_measurement_source (test_core.EngineView.test_spec_source_not_overwritten_by_measurement_source) ... ok
 test_base_case_pass (test_core.Interference.test_base_case_pass) ... ok
 test_no_service_space_defined_is_unchecked_not_pass (test_core.Interference.test_no_service_space_defined_is_unchecked_not_pass) ... ok
 test_outside_room_fail (test_core.Interference.test_outside_room_fail) ... ok
@@ -45,6 +58,6 @@ test_space_without_basis_rejected (test_interference_cases.Cases.test_space_with
 test_table (test_interference_cases.Cases.test_table) ... ok
 
 ----------------------------------------------------------------------
-Ran 45 tests in 0.027s
+Ran 58 tests in 0.040s
 
 OK

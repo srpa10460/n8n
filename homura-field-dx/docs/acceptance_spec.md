@@ -1,7 +1,7 @@
 # Acceptance table (authoritative status; update with every checkpoint)
 
 Legend: VERIFIED-AUTO = automated test passes in THIS environment (Linux, headless Chromium 141, Python 3.11) | PARTIAL | NOT-IMPLEMENTED | NOT-EXECUTED | NOT-PERFORMED | BLOCKED | UNVERIFIED-TARGET = needs the real target device.
-Requirement text: docs/SPEC.md. Code/test/evidence mapping: docs/TRACEABILITY.md. Last updated: CHECKPOINT-002.
+Requirement text: docs/SPEC.md. Code/test/evidence mapping: docs/TRACEABILITY.md. Last updated: CHECKPOINT-002 (final state of that checkpoint).
 
 | ID | Requirement (short) | Status | Notes |
 |----|---------------------|--------|-------|
@@ -30,9 +30,9 @@ Requirement text: docs/SPEC.md. Code/test/evidence mapping: docs/TRACEABILITY.md
 | OFF-8 | Delivery technology validated on TARGET device | UNVERIFIED-TARGET | target device undecided; PWA is an assumption |
 | OFF-9 | Required scenario chain incl. interrupt/resend/quota/auth/conflict | VERIFIED-AUTO | tests/e2e_offline.py (41 checks) |
 | OFF-10 | Real HTTPS/VPS deployment (Service Worker needs secure context off localhost) | BLOCKED | VPS unknown/unavailable |
-| B-1 | Blender model from approved data, dims/placement/hash check | NOT-EXECUTED | bpy 5.0.1 installs from PyPI; script exists, not yet run (see CHECKPOINT) |
-| B-2 | Still image + short orbit video, visual inspection | NOT-EXECUTED | |
-| DOC-1 | PDF manual with TOC links, bookmarks, UI screenshots, render QA | NOT-EXECUTED | UI screenshots exist in docs/screens |
-| VID-1 | PR video storyboard / production | NOT-EXECUTED | |
-| PAY-1 | Payment providers comparison (official sources), pricing draft | NOT-EXECUTED | no accounts to be created |
+| B-1 | Blender model from approved data, dims/placement/hash check | VERIFIED-AUTO | bpy 5.0.1 (PyPI) executed; 11 checks incl. dims/placement vs snapshot, hash, refusal of unapproved/tampered (tests/test_blender_guards.py); synthetic data, DEV_SIMULATED approval |
+| B-2 | Still image + short orbit video, visual inspection | PARTIAL | still, derived (exploded) still, 3 s / 72-frame orbit mp4 rendered and LOOKED AT (evidence/blender); plain Workbench boxes, not presentation quality; section view and camera-work design not done |
+| DOC-1 | PDF manual with TOC links, bookmarks, UI screenshots, render QA | VERIFIED-AUTO | docs/manual/HOA_Field_DX_Manual.pdf (29 pages); scripts/qa_manual.py 18 checks + visual inspection of rendered pages; screenshots are 960 px wide captures from the real UI |
+| VID-1 | PR video storyboard / production | PARTIAL | storyboard only (docs/pr_video/storyboard.md); NO video produced; live UI screen recording not yet made |
+| PAY-1 | Payment providers comparison (official sources), pricing draft | PARTIAL | comparison from search summaries of official pages (direct fetch blocked; must be re-verified); pricing = structure/formula only, no prices (inputs missing); provider-neutral entitlement simulation verified (9 tests); no provider test-mode integration, no account |
 | GRD-1 | Independent Guardian review | NOT-PERFORMED | no independent reviewer available in session; evidence is ready |

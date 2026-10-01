@@ -157,7 +157,7 @@
  {
   "name": "adopt server: local version backed up on device",
   "pass": true,
-  "detail": "['conflict-backup/P-0001/1790844212355']"
+  "detail": "['conflict-backup/P-0001/1790844802247']"
  },
  {
   "name": "adopt server: server value (570) now on device",
@@ -182,7 +182,7 @@
  {
   "name": "quota: failed edit not persisted after reload",
   "pass": true,
-  "detail": "幅 *\nwidth\n\tx\t本体外寸 左端〜右端 (高さ中央) / スチールテープ / ±2mm / 10〜3000mm\n出典: MEASURED\t762.000 mm\n入力: 30 in\n\t実測\t \nmm\ncm\nm\nin\nft\n \n実測\n写真推定\n  入力"
+  "detail": "幅 *\nwidth\n\tx\t本体外寸 左端〜右端 (高さ中央) / スチールテープ / ±2mm / 10〜3000mm\n出典: client-defined\t762.000 mm\n入力: 30 in\n\t実測\t \nmm\ncm\nm\nin\nft\n \n実測\n写真推定\n  入力"
  },
  {
   "name": "quota: failed photo not persisted",
