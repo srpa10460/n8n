@@ -40,3 +40,15 @@ Payment work stops at test environments; researching providers needs no account.
 - Dev auth token (`HOA_DEV_AUTH=1`) is not real authentication.
 - Do not run `playwright install` (no network browser download); use the system Chromium via `executable_path`.
 - Do not commit `static/vendor/` (Pyodide binaries), `.venv/`, `data/`.
+
+## PR monitoring policy (instruction from 伊佐; applies to PR srpa10460/n8n#1 and successors)
+Goal: watch CI, review comments, merge conflicts and Head updates; act only when needed. Principle: Agent First >> Diagnostic >> Evidence >> Regression Test >> Human Final Review. Merge is ALWAYS a Human Gate.
+1. Status check covers: OPEN/CLOSED, Head SHA, mergeable, CI/Actions, reviews, review threads, comments, conflicts.
+2. CI/Actions count 0 => record `NO_CI_RUNS`; never treat as PASS; keep it separate from HOMURA verification. The local Evidence of `scripts/run_all_tests.sh` is the source of truth.
+3. CI failure => diagnose first and classify: A = caused by this PR; B = upstream n8n / workflow / infrastructure; C = undeterminable. Only A and only low-risk local fixes: fix, test, push. B: change no code. C: do not guess; collect evidence.
+4. Review comment => typos, lint, doc fixes, obvious small bugs (no design change) may be handled by the Agent. Anything touching architecture, data model, security, offline design, approval model, billing, authentication, SSOT, external publication or production deployment goes to the Human Gate. Do not assume a reviewer is right: reproduce/verify before acting.
+5. Conflict => no automatic merge. Inspect the conflicting files and blast radius. Pulling in changes outside `homura-field-dx/` is a Human Gate. Never make unintended changes to n8n itself.
+6. Head SHA changed => do not reuse earlier Evidence for the new Head. Check what changed, re-run the needed regression tests, re-bind Evidence to the new Head SHA.
+7. Forbidden: auto-merge; acting as Reviewer approval; production deploy; billing/contract operations; credential changes; SSOT/Canonical promotion; unneeded changes outside `homura-field-dx/`; treating 0 CI runs as PASS.
+8. Notify the Human only on: CI failure, review/comment added, conflict, Head SHA change, a design decision needed, security/credential/billing/production matters, merge-ready. No change => no notification.
+Report format (Signal / Decision / Reason / Evidence / Next Action / State) with 🟢 READY, 🟡 CAUTION, 🔴 BLOCKED, 🔵 INFO. Status log: `docs/pr_monitor_log.md`.
