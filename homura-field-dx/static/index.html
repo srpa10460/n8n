@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HOMURA Field DX</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<style>
+:root{--bg:#f5f6f8;--panel:#fff;--text:#1d2330;--sub:#5b6577;--line:#d9dee7;--accent:#1f5fbf;--ok:#16794a;--okbg:#e3f5ec;--warn:#8a5a00;--warnbg:#fff1d6;--ng:#b3261e;--ngbg:#fde7e5;--gray:#5b6577;--graybg:#eceff3}
+@media (prefers-color-scheme:dark){:root{--bg:#14171d;--panel:#1d222b;--text:#e8ebf1;--sub:#a3acbb;--line:#323a47;--accent:#6ea3ff;--ok:#6fd7a2;--okbg:#14382a;--warn:#f1c36b;--warnbg:#3d2f10;--ng:#ff8f86;--ngbg:#431a17;--gray:#a3acbb;--graybg:#2a303b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif}
+header{background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+header h1{font-size:16px;margin:0}
+.layout{display:flex;min-height:calc(100vh - 56px)}
+nav{width:176px;flex:none;background:var(--panel);border-right:1px solid var(--line);padding:8px}
+nav button{display:block;width:100%;text-align:left;padding:8px 10px;margin:2px 0;border:0;border-radius:6px;background:none;color:var(--text);cursor:pointer;font:inherit}
+nav button.on{background:var(--accent);color:#fff}
+main{flex:1;padding:16px;max-width:1100px;min-width:0}
+section.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:14px}
+h2{font-size:16px;margin:0 0 10px}h3{font-size:14px;margin:12px 0 6px}
+label{display:inline-flex;flex-direction:column;gap:2px;margin:0 10px 8px 0;font-size:12px;color:var(--sub)}
+input,select,textarea,button.btn{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--text)}
+input[type=checkbox]{padding:0}
+button.btn{cursor:pointer;background:var(--accent);color:#fff;border-color:var(--accent)}
+button.btn.sec{background:none;color:var(--accent)}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}th{color:var(--sub);font-weight:600}
+.badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-ok{background:var(--okbg);color:var(--ok)}.b-warn{background:var(--warnbg);color:var(--warn)}.b-ng{background:var(--ngbg);color:var(--ng)}.b-gray{background:var(--graybg);color:var(--gray)}
+.notice{border:1px solid var(--warn);background:var(--warnbg);color:var(--warn);padding:8px 10px;border-radius:6px;margin:8px 0}
+.err{border:1px solid var(--ng);background:var(--ngbg);color:var(--ng);padding:8px 10px;border-radius:6px;margin:8px 0}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}.sub{color:var(--sub);font-size:12px}
+.row{display:flex;flex-wrap:wrap;align-items:flex-end}
+.thumbs img{height:72px;border:1px solid var(--line);border-radius:4px;margin:4px 6px 0 0}
+.plan{width:100%;max-width:760px;border:1px solid var(--line);background:#fff;border-radius:6px}
+@media (max-width:760px){.layout{flex-direction:column}nav{width:100%;display:flex;flex-wrap:wrap}nav button{width:auto}}
+</style>
+</head>
+<body>
+<header>
+  <h1>HOMURA Field DX <span class="sub">開発版 (dev)</span></h1>
+  <span id="hdr"></span>
+</header>
+<div class="layout">
+  <nav id="nav"></nav>
+  <main id="main"></main>
+</div>
+<script type="module" src="/app.js"></script>
+</body>
+</html>

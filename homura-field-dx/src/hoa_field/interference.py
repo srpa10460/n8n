@@ -1,17 +1,40 @@
-"""Interference check with explicit PASS / FAIL / UNCHECKED. Never passes what it could not check.
+"""Interference checks. Three separate questions, never merged into one number:
 
-Geometry: axis-aligned boxes from the definition's box template and the placement
-(rotation 0/180 keep x/y extents, 90/270 swap them). Scope: object-vs-object and
-object-vs-room bounds. Door swings, non-box shapes, obstacles not in the project are OUT OF SCOPE
-and are reported as such in the result of `scope_notes()`.
+ 1. OVERLAP   - do two solids occupy the same volume?
+                Boxes A,B overlap iff the penetration depth is > 0 on ALL three axes, where
+                penetration_i = min(A.max_i, B.max_i) - max(A.min_i, B.min_i).
+                penetration == 0 on an axis (face contact) is NOT overlap; it is reported as CONTACT in metrics.
+ 2. DISTANCE  - how far apart are two solids? Euclidean distance between the boxes:
+                sqrt(sum_i max(0, gap_i)^2), gap_i = max(A.min_i - B.max_i, B.min_i - A.max_i).
+                Per-axis gaps are reported too. Status INFO: a distance alone has no pass/fail without a requirement.
+ 3. SERVICE   - work / maintenance / opening space an object REQUIRES. The required depth and its
+                basis are input values on the definition (ServiceSpace); nothing is assumed.
+                The space is a box extruded from one face of the object (face width x depth_mm).
+                PASS: it overlaps no other object and stays inside the room.  FAIL: it does.
+                UNCHECKED: no space defined, other objects unconfirmed/unplaced (cannot rule out),
+                door/drawer object without an "opening" space, or unsupported shape.
+ Also ROOM: solid inside room bounds.
+
+Scope limits (reported as UNCHECKED, never PASS): non-box shapes; opening envelopes not declared;
+objects not registered in the project; rotations other than 0/90/180/270.
+Front faces +y at rotation 0; rotation is counter-clockwise in plan (0:+y, 90:-x, 180:-y, 270:+x).
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from itertools import combinations
 
-from .project import Project, ObjectInstance
+from .project import ObjectInstance, Project
+
+ZERO = Decimal(0)
+_NORMAL = {0: {"front": (0, 1), "back": (0, -1), "left": (-1, 0), "right": (1, 0)}}
+# local (rot 0) normals rotated CCW by rot
+def _rot(n, rot):
+    x, y = n
+    for _ in range(rot // 90):
+        x, y = -y, x
+    return x, y
 
 
 @dataclass(frozen=True)
@@ -21,20 +44,22 @@ class Box:
 
 @dataclass(frozen=True)
 class Result:
-    pair_id: str
-    status: str   # PASS | FAIL | UNCHECKED
+    pair_id: str                 # stable id used for waivers
+    kind: str                    # OVERLAP | DISTANCE | SERVICE | OPENING | ROOM
+    status: str                  # PASS | FAIL | UNCHECKED | INFO
     reason: str
+    metrics: dict = field(default_factory=dict, compare=False)
 
 
 def scope_notes() -> list[str]:
-    return ["box templates only", "no door/drawer swing envelopes", "objects not in project are unknown",
-            "clearance checked only where the definition declares clearance_mm"]
+    return ["box shapes only", "opening envelopes only if declared as 'opening' spaces",
+            "service-space depth/basis are client inputs, not defaults", "objects outside the project are unknown"]
 
 
 def box_of(p: Project, inst: ObjectInstance) -> Box | None:
-    if inst.placement is None or not p.dims_confirmed(inst):
-        return None
     d = p.definition(inst)
+    if d.shape_template != "box" or inst.placement is None or not p.dims_confirmed(inst):
+        return None
     ext = {s.axis: inst.measurements[s.key].mm for s in d.dimensions if s.required}
     w, dp, h = ext["x"], ext["y"], ext["z"]
     if inst.placement.rotation_deg in (90, 270):
@@ -43,50 +68,101 @@ def box_of(p: Project, inst: ObjectInstance) -> Box | None:
     return Box(pl.x_mm, pl.y_mm, pl.z_mm, pl.x_mm + w, pl.y_mm + dp, pl.z_mm + h)
 
 
-def _gap(a: Box, b: Box) -> Decimal:
-    """Smallest axis separation; negative => overlapping in that axis. Returns max over axes
-    (>=0 means separated; overlap in all axes => negative)."""
-    gx = max(a.x0 - b.x1, b.x0 - a.x1)
-    gy = max(a.y0 - b.y1, b.y0 - a.y1)
-    gz = max(a.z0 - b.z1, b.z0 - a.z1)
-    return max(gx, gy, gz)
+def axis_gaps(a: Box, b: Box) -> tuple[Decimal, Decimal, Decimal]:
+    return (max(a.x0 - b.x1, b.x0 - a.x1), max(a.y0 - b.y1, b.y0 - a.y1), max(a.z0 - b.z1, b.z0 - a.z1))
+
+
+def euclid(gaps) -> Decimal:
+    return sum((max(ZERO, g) ** 2 for g in gaps), ZERO).sqrt()
+
+
+def overlaps(a: Box, b: Box) -> bool:
+    return all(g < 0 for g in axis_gaps(a, b))
+
+
+def space_box(b: Box, rot: int, side: str, depth: Decimal) -> Box:
+    if side == "top":
+        return Box(b.x0, b.y0, b.z1, b.x1, b.y1, b.z1 + depth)
+    nx, ny = _rot(_NORMAL[0][side], rot)
+    x0, x1, y0, y1 = b.x0, b.x1, b.y0, b.y1
+    if nx > 0: x0, x1 = b.x1, b.x1 + depth
+    elif nx < 0: x0, x1 = b.x0 - depth, b.x0
+    if ny > 0: y0, y1 = b.y1, b.y1 + depth
+    elif ny < 0: y0, y1 = b.y0 - depth, b.y0
+    return Box(x0, y0, b.z0, x1, y1, b.z1)
 
 
 def check_all(p: Project) -> list[Result]:
     res: list[Result] = []
-    insts = list(p.instances.values())
-    for inst in insts:
-        pid = f"{inst.object_id}@room"
-        b = box_of(p, inst)
+    insts = sorted(p.instances.values(), key=lambda i: i.object_id)
+    boxes = {i.object_id: box_of(p, i) for i in insts}
+    W, Dp, H = p.room["w"], p.room["d"], p.room["h"]
+    for i in insts:
+        b = boxes[i.object_id]
         if b is None:
-            res.append(Result(pid, "UNCHECKED", "dimensions not confirmed or not placed"))
+            why = ("unsupported shape" if p.definition(i).shape_template != "box"
+                   else "dimensions not confirmed (measured) or not placed")
+            res.append(Result(f"{i.object_id}@room", "ROOM", "UNCHECKED", why))
             continue
-        inside = (b.x0 >= 0 and b.y0 >= 0 and b.z0 >= 0 and
-                  b.x1 <= p.room["w"] and b.y1 <= p.room["d"] and b.z1 <= p.room["h"])
-        res.append(Result(pid, "PASS" if inside else "FAIL", "inside room" if inside else "outside room bounds"))
+        ok = b.x0 >= 0 and b.y0 >= 0 and b.z0 >= 0 and b.x1 <= W and b.y1 <= Dp and b.z1 <= H
+        res.append(Result(f"{i.object_id}@room", "ROOM", "PASS" if ok else "FAIL",
+                          "inside room" if ok else "outside room bounds"))
     for a, c in combinations(insts, 2):
+        ba, bc = boxes[a.object_id], boxes[c.object_id]
         pid = f"{a.object_id}|{c.object_id}"
-        ba, bc = box_of(p, a), box_of(p, c)
         if ba is None or bc is None:
-            res.append(Result(pid, "UNCHECKED", "dimensions not confirmed or not placed"))
+            res.append(Result(f"{pid}#overlap", "OVERLAP", "UNCHECKED", "an object is unconfirmed/unplaced"))
             continue
-        gap = _gap(ba, bc)
-        if gap < 0:
-            res.append(Result(pid, "FAIL", f"solids overlap (penetration {-gap} mm)"))
-            continue
-        reqs = [r for r in (p.definition(a).clearance_mm, p.definition(c).clearance_mm) if r is not None]
-        if not reqs:
-            res.append(Result(pid, "UNCHECKED", f"no clearance defined (gap {gap} mm, no overlap)"))
-        elif gap >= max(reqs):
-            res.append(Result(pid, "PASS", f"gap {gap} mm >= required {max(reqs)} mm"))
+        g = axis_gaps(ba, bc)
+        pen = tuple(-x for x in g)
+        if all(x > 0 for x in pen):
+            res.append(Result(f"{pid}#overlap", "OVERLAP", "FAIL",
+                              f"solids overlap (penetration x/y/z = {pen[0]}/{pen[1]}/{pen[2]} mm)",
+                              {"penetration": [str(x) for x in pen]}))
         else:
-            res.append(Result(pid, "FAIL", f"gap {gap} mm < required {max(reqs)} mm"))
+            contact = max(g) == 0
+            res.append(Result(f"{pid}#overlap", "OVERLAP", "PASS", "contact (0 mm), no overlap" if contact
+                              else "no overlap", {"contact": contact}))
+        e = euclid(g)
+        res.append(Result(f"{pid}#distance", "DISTANCE", "INFO", f"distance {e.quantize(Decimal('0.001'))} mm "
+                          f"(axis gaps x/y/z {g[0]}/{g[1]}/{g[2]})",
+                          {"euclid_mm": str(e.quantize(Decimal('0.001'))), "gaps": [str(x) for x in g]}))
+    for i in insts:
+        d = p.definition(i)
+        b = boxes[i.object_id]
+        spaces = [s for s in d.required_spaces]
+        if not spaces:
+            res.append(Result(f"{i.object_id}#service", "SERVICE", "UNCHECKED",
+                              "no required service space defined for this definition version"))
+        if d.has_opening and not any(s.kind == "opening" for s in spaces):
+            res.append(Result(f"{i.object_id}#opening", "OPENING", "UNCHECKED",
+                              "door/drawer object without a declared opening envelope"))
+        if b is None:
+            continue
+        others_unknown = [o.object_id for o in insts if o is not i and boxes[o.object_id] is None]
+        for s in spaces:
+            sid = f"{i.object_id}#{s.kind}-{s.side}"
+            zone = space_box(b, i.placement.rotation_deg, s.side, s.depth_mm)
+            hits = [o.object_id for o in insts if o is not i and boxes[o.object_id] and overlaps(zone, boxes[o.object_id])]
+            outside = not (zone.x0 >= 0 and zone.y0 >= 0 and zone.z0 >= 0 and zone.x1 <= W and zone.y1 <= Dp and zone.z1 <= H)
+            basis = f"{s.depth_mm} mm, basis: {s.basis}"
+            if hits or outside:
+                why = []
+                if hits: why.append("blocked by " + ",".join(hits))
+                if outside: why.append("extends outside room")
+                res.append(Result(sid, "OPENING" if s.kind == "opening" else "SERVICE", "FAIL", "; ".join(why) + f" ({basis})"))
+            elif others_unknown:
+                res.append(Result(sid, "OPENING" if s.kind == "opening" else "SERVICE", "UNCHECKED",
+                                  f"clear of known objects, but unconfirmed objects exist: {','.join(others_unknown)} ({basis})"))
+            else:
+                res.append(Result(sid, "OPENING" if s.kind == "opening" else "SERVICE", "PASS", f"space free ({basis})"))
     return res
 
 
 def overall(results: list[Result]) -> str:
-    if any(r.status == "FAIL" for r in results):
+    rel = [r for r in results if r.status != "INFO"]
+    if any(r.status == "FAIL" for r in rel):
         return "FAIL"
-    if any(r.status == "UNCHECKED" for r in results) or not results:
+    if any(r.status == "UNCHECKED" for r in rel) or not rel:
         return "INCOMPLETE"
     return "PASS"

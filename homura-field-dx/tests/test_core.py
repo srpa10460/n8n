@@ -46,7 +46,7 @@ class Catalog_(unittest.TestCase):
         before = p.content_hash()
         d = p.catalog.get("vanity")
         from dataclasses import replace
-        v2 = p.catalog.publish(replace(d, required_photos=d.required_photos + ("side",), clearance_mm=D("100")))
+        v2 = p.catalog.publish(replace(d, required_photos=d.required_photos + ("side",)))
         self.assertEqual(v2.version, 2)
         self.assertEqual(p.instances["O-VAN"].definition_version, 1)
         self.assertEqual(p.content_hash(), before)           # past case meaning unchanged
@@ -120,43 +120,38 @@ class Validation(unittest.TestCase):
 
 
 class Interference(unittest.TestCase):
+    def st(self, p):
+        return {x.pair_id: x.status for x in check_all(p)}
+
     def test_base_case_pass(self):
         r = check_all(build_project())
-        self.assertEqual(overall(r), "PASS", [x for x in r if x.status != "PASS"])
+        self.assertEqual(overall(r), "PASS", [x for x in r if x.status not in ("PASS", "INFO")])
 
     def test_overlap_fail(self):
         p = build_project(); p.place("O-WSH", "700", "0")
-        st = {x.pair_id: x.status for x in check_all(p)}
-        self.assertEqual(st["O-VAN|O-WSH"], "FAIL")
-
-    def test_clearance_fail_and_boundary(self):
-        p = build_project()
-        p.place("O-WSH", "769", "0")   # gap 19 < 20
-        self.assertEqual({x.pair_id: x.status for x in check_all(p)}["O-VAN|O-WSH"], "FAIL")
-        p.place("O-WSH", "770", "0")   # gap 20 == 20
-        self.assertEqual({x.pair_id: x.status for x in check_all(p)}["O-VAN|O-WSH"], "PASS")
+        self.assertEqual(self.st(p)["O-VAN|O-WSH#overlap"], "FAIL")
 
     def test_outside_room_fail(self):
         p = build_project(); p.place("O-WSH", "1900", "0")
-        self.assertEqual({x.pair_id: x.status for x in check_all(p)}["O-WSH@room"], "FAIL")
+        self.assertEqual(self.st(p)["O-WSH@room"], "FAIL")
 
     def test_rotation_swaps_footprint(self):
-        p = build_project(); p.place("O-WSH", "1000", "0", rotation_deg=90)
-        # footprint becomes 600x640 -> still inside; place so rotated depth exceeds room
-        p.place("O-WSH", "1000", "1300", rotation_deg=90)
-        self.assertEqual({x.pair_id: x.status for x in check_all(p)}["O-WSH@room"], "FAIL")
+        p = build_project(); p.place("O-WSH", "1000", "1300", rotation_deg=90)
+        self.assertEqual(self.st(p)["O-WSH@room"], "FAIL")
 
-    def test_no_clearance_defined_is_unchecked_not_pass(self):
+    def test_service_space_blocked_by_washer(self):
+        p = build_project(); p.place("O-WSH", "0", "560")   # inside vanity front 500mm zone (y 550-1050)
+        self.assertEqual(self.st(p)["O-VAN#service-front"], "FAIL")
+
+    def test_no_service_space_defined_is_unchecked_not_pass(self):
         from dataclasses import replace
         p = build_project()
-        d = p.catalog.get("wall-cabinet"); p.catalog._defs["wall-cabinet"][0] = replace(d, clearance_mm=None)
-        st = {x.pair_id: x.status for x in check_all(p)}
-        self.assertEqual(st["O-VAN|O-WCB"], "UNCHECKED")
+        d = p.catalog.get("vanity"); p.catalog._defs["vanity"][0] = replace(d, required_spaces=())
+        self.assertEqual(self.st(p)["O-VAN#service"], "UNCHECKED")
         self.assertEqual(overall(check_all(p)), "INCOMPLETE")
 
     def test_vertical_separation_allows_stacking(self):
-        r = {x.pair_id: x for x in check_all(build_project())}
-        self.assertEqual(r["O-VAN|O-WCB"].status, "PASS")
+        self.assertEqual(self.st(build_project())["O-VAN|O-WCB#overlap"], "PASS")
 
 
 class Approval(unittest.TestCase):
@@ -177,16 +172,16 @@ class Approval(unittest.TestCase):
 
     def test_fail_cannot_be_approved_even_with_waiver(self):
         p = build_project(); p.place("O-WSH", "700", "0"); p.submit_for_review()
-        with self.assertRaises(ApprovalError): p.approve("Isa", {"O-VAN|O-WSH": "ok"})
+        with self.assertRaises(ApprovalError): p.approve("Isa", {"O-VAN|O-WSH#overlap": "ok"})
 
     def test_unchecked_needs_reasoned_waiver(self):
         from dataclasses import replace
         p = build_project()
-        d = p.catalog.get("wall-cabinet"); p.catalog._defs["wall-cabinet"][0] = replace(d, clearance_mm=None)
+        d = p.catalog.get("vanity"); p.catalog._defs["vanity"][0] = replace(d, required_spaces=())
         p.submit_for_review()
         with self.assertRaises(ApprovalError): p.approve("Isa")
-        a = p.approve("Isa", {"O-VAN|O-WCB": "clearance not defined; visually confirmed on site"})
-        self.assertIn("O-VAN|O-WCB", manifest(p)["waivers"])
+        p.approve("Isa", {"O-VAN#service": "service space not defined; site check by Human"})
+        self.assertIn("O-VAN#service", manifest(p)["waivers"])
 
     def test_change_after_approval_invalidates(self):
         p = self.ready(); p.approve("Isa")
@@ -203,6 +198,42 @@ class Approval(unittest.TestCase):
         p = self.ready(); p.approve("Isa"); p.set_measurement("O-VAN", "width", "751")
         p.submit_for_review(); p.approve("Isa")
         self.assertEqual(len([a for a in p.approvals if a.valid]), 1)
+
+
+class ApprovalBinding(unittest.TestCase):
+    def test_stale_version_or_hash_refused(self):
+        p = build_project(); p.submit_for_review()
+        v, h = p.data_version, p.content_hash()
+        with self.assertRaises(ApprovalError): p.approve("Isa", expect_version=v - 1, expect_hash=h)
+        with self.assertRaises(ApprovalError): p.approve("Isa", expect_version=v, expect_hash="0" * 64)
+        a = p.approve("Isa", expect_version=v, expect_hash=h, kind="HUMAN_FINAL")
+        self.assertEqual(a.kind, "HUMAN_FINAL")
+
+    def test_kind_distinguished_in_outputs(self):
+        p = build_project(); p.submit_for_review(); p.approve("dev")
+        self.assertIn("DEV SIMULATED", svg_plan(p)); self.assertIn("DEV SIMULATED", manifest(p)["status_note"])
+        p2 = build_project(); p2.submit_for_review(); p2.approve("Isa", kind="HUMAN_FINAL")
+        self.assertNotIn("DEV SIMULATED", svg_plan(p2))
+
+    def test_unknown_kind(self):
+        p = build_project(); p.submit_for_review()
+        with self.assertRaises(ApprovalError): p.approve("Isa", kind="MAYBE")
+
+    def test_persistence_roundtrip(self):
+        p = build_project(); p.submit_for_review(); p.approve("dev")
+        from hoa_field.project import Project
+        q = Project.from_dict(json.loads(json.dumps(p.to_dict())), p.catalog)
+        self.assertEqual(q.content_hash(), p.content_hash())
+        self.assertIsNotNone(q.current_approval())
+
+
+class PhotoRules(unittest.TestCase):
+    def test_same_photo_cannot_be_attached_twice_to_one_object(self):
+        p = build_project(complete=False)
+        p.add_photo("O-VAN", "A-1", "front", {"sha256": "a"})
+        with self.assertRaises(ValueError): p.add_photo("O-VAN", "A-1", "wall-context", {"sha256": "a"})
+        self.assertEqual(p.instances["O-VAN"].photo_tags["A-1"], "front")   # not silently retagged
+        p.add_photo("O-WCB", "A-1", "front", {"sha256": "a"})                  # other object may reference the same asset
 
 
 class Outputs(unittest.TestCase):

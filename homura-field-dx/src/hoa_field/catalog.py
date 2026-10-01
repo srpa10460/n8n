@@ -23,6 +23,20 @@ class DimensionSpec:
     source: str = "client-defined"  # provenance of this spec
 
 
+SIDES = ("front", "back", "left", "right", "top")
+SPACE_KINDS = ("service", "opening")
+
+
+@dataclass(frozen=True)
+class ServiceSpace:
+    """Space that must stay free of other objects. Depth is a client/spec-supplied input;
+    `basis` (where the number comes from) is mandatory - the system never fills it in."""
+    kind: str        # service (work/maintenance) | opening (door/drawer sweep)
+    side: str        # front|back|left|right|top  (front faces +y at rotation 0)
+    depth_mm: Decimal
+    basis: str
+
+
 @dataclass(frozen=True)
 class ObjectDefinition:
     definition_id: str
@@ -32,8 +46,8 @@ class ObjectDefinition:
     shape_template: str = "box"
     required_photos: tuple[str, ...] = ()
     required_annotations: tuple[str, ...] = ()
-    # required clearance in mm; None => undefined (interference clearance stays UNCHECKED)
-    clearance_mm: Decimal | None = None
+    required_spaces: tuple[ServiceSpace, ...] = ()
+    has_opening: bool = False   # door/drawer: needs an "opening" space, else reported UNCHECKED
     version: int = 0  # assigned by Catalog.publish
 
     def dim(self, key: str) -> DimensionSpec:
@@ -52,6 +66,9 @@ class ObjectDefinition:
                 raise ValueError("box template needs exactly one required dimension per axis x,y,z")
         else:
             raise ValueError(f"unsupported shape_template: {self.shape_template}")
+        for sp in self.required_spaces:
+            if sp.kind not in SPACE_KINDS or sp.side not in SIDES or sp.depth_mm <= 0 or not sp.basis.strip():
+                raise ValueError(f"bad required space (kind/side/depth>0/basis needed): {sp}")
         for d in self.dimensions:
             if d.axis not in AXES or d.min_mm <= 0 or d.max_mm <= d.min_mm or d.tolerance_mm < 0:
                 raise ValueError(f"bad dimension spec: {d.key}")
@@ -86,22 +103,59 @@ class Catalog:
             raise KeyError(f"unknown version {version} of {definition_id}")
         return versions[version - 1]
 
-    def save(self, path: Path) -> None:
-        data = {k: [asdict(v) for v in vs] for k, vs in self._defs.items()}
-        path.write_text(json.dumps(data, default=_enc, ensure_ascii=False, indent=2, sort_keys=True))
+    def to_dict(self) -> dict:
+        return json.loads(json.dumps({k: [asdict(v) for v in vs] for k, vs in self._defs.items()}, default=_enc))
 
     @classmethod
-    def load(cls, path: Path) -> "Catalog":
+    def from_dict(cls, data: dict) -> "Catalog":
         c = cls()
-        for k, vs in json.loads(path.read_text()).items():
+        for k, vs in data.items():
             for v in vs:
                 dims = tuple(
                     DimensionSpec(**{**d, "tolerance_mm": Decimal(d["tolerance_mm"]),
                                      "min_mm": Decimal(d["min_mm"]), "max_mm": Decimal(d["max_mm"])})
                     for d in v["dimensions"])
-                cl = Decimal(v["clearance_mm"]) if v["clearance_mm"] is not None else None
+                sps = tuple(ServiceSpace(**{**x, "depth_mm": Decimal(x["depth_mm"])})
+                            for x in v.get("required_spaces", []))
                 c._defs.setdefault(k, []).append(ObjectDefinition(
-                    **{**v, "dimensions": dims, "clearance_mm": cl,
+                    **{**v, "dimensions": dims, "required_spaces": sps,
                        "required_photos": tuple(v["required_photos"]),
                        "required_annotations": tuple(v["required_annotations"])}))
         return c
+
+    def save(self, path: Path) -> None:
+        path.write_text(json.dumps(self.to_dict(), ensure_ascii=False, indent=2, sort_keys=True))
+
+    @classmethod
+    def load(cls, path: Path) -> "Catalog":
+        return cls.from_dict(json.loads(path.read_text()))
+
+    def merge_definitions(self, other: dict) -> None:
+        """Server-side: add versions from a client catalog dict. Existing id@version must be identical."""
+        theirs = Catalog.from_dict(other)
+        for k, vs in theirs._defs.items():
+            mine = self._defs.setdefault(k, [])
+            for v in vs:
+                if v.version <= len(mine):
+                    if mine[v.version - 1] != v:
+                        raise ValueError(f"catalog conflict: {k}@v{v.version} differs from server")
+                elif v.version == len(mine) + 1:
+                    mine.append(v)
+                else:
+                    raise ValueError(f"catalog gap: {k}@v{v.version} but server has {len(mine)} versions")
+
+
+def definition_from_dict(d: dict) -> ObjectDefinition:
+    """Build a definition from plain JSON (UI/API input). Raises ValueError/KeyError on bad input."""
+    dims = tuple(DimensionSpec(
+        key=x["key"], label=x.get("label") or x["key"], required=bool(x.get("required", True)),
+        axis=x["axis"], datum=x["datum"], method=x["method"], tolerance_mm=Decimal(str(x["tolerance_mm"])),
+        min_mm=Decimal(str(x["min_mm"])), max_mm=Decimal(str(x["max_mm"])), source=x.get("source") or "client-defined")
+        for x in d["dimensions"])
+    sps = tuple(ServiceSpace(x["kind"], x["side"], Decimal(str(x["depth_mm"])), x.get("basis", ""))
+                for x in d.get("required_spaces", []))
+    if not d.get("definition_id") or not d.get("name"):
+        raise ValueError("definition_id and name required")
+    return ObjectDefinition(d["definition_id"], d["name"], d.get("category", ""), dims,
+                            d.get("shape_template", "box"), tuple(d.get("required_photos", [])),
+                            tuple(d.get("required_annotations", [])), sps, bool(d.get("has_opening", False)))

@@ -4,16 +4,20 @@ test_fail_cannot_be_approved_even_with_waiver (test_core.Approval.test_fail_cann
 test_reapproval_after_change (test_core.Approval.test_reapproval_after_change) ... ok
 test_requires_review_and_named_approver (test_core.Approval.test_requires_review_and_named_approver) ... ok
 test_unchecked_needs_reasoned_waiver (test_core.Approval.test_unchecked_needs_reasoned_waiver) ... ok
+test_kind_distinguished_in_outputs (test_core.ApprovalBinding.test_kind_distinguished_in_outputs) ... ok
+test_persistence_roundtrip (test_core.ApprovalBinding.test_persistence_roundtrip) ... ok
+test_stale_version_or_hash_refused (test_core.ApprovalBinding.test_stale_version_or_hash_refused) ... ok
+test_unknown_kind (test_core.ApprovalBinding.test_unknown_kind) ... ok
 test_client_can_add_definition_but_bad_ones_rejected (test_core.Catalog_.test_client_can_add_definition_but_bad_ones_rejected) ... ok
 test_published_version_immutable_and_unknown (test_core.Catalog_.test_published_version_immutable_and_unknown) ... ok
 test_save_load_roundtrip (test_core.Catalog_.test_save_load_roundtrip) ... ok
 test_version_pinning_survives_catalog_update (test_core.Catalog_.test_version_pinning_survives_catalog_update) ... ok
 test_base_case_pass (test_core.Interference.test_base_case_pass) ... ok
-test_clearance_fail_and_boundary (test_core.Interference.test_clearance_fail_and_boundary) ... ok
-test_no_clearance_defined_is_unchecked_not_pass (test_core.Interference.test_no_clearance_defined_is_unchecked_not_pass) ... ok
+test_no_service_space_defined_is_unchecked_not_pass (test_core.Interference.test_no_service_space_defined_is_unchecked_not_pass) ... ok
 test_outside_room_fail (test_core.Interference.test_outside_room_fail) ... ok
 test_overlap_fail (test_core.Interference.test_overlap_fail) ... ok
 test_rotation_swaps_footprint (test_core.Interference.test_rotation_swaps_footprint) ... ok
+test_service_space_blocked_by_washer (test_core.Interference.test_service_space_blocked_by_washer) ... ok
 test_vertical_separation_allows_stacking (test_core.Interference.test_vertical_separation_allows_stacking) ... ok
 test_approved_not_marked (test_core.Outputs.test_approved_not_marked) ... ok
 test_export_failure_then_rerun_idempotent (test_core.Outputs.test_export_failure_then_rerun_idempotent) ... ok
@@ -21,6 +25,7 @@ test_failed_write_leaves_no_partial (test_core.Outputs.test_failed_write_leaves_
 test_obj_valid_faces (test_core.Outputs.test_obj_valid_faces) ... ok
 test_unapproved_is_marked_everywhere (test_core.Outputs.test_unapproved_is_marked_everywhere) ... ok
 test_unconfirmed_object_not_drawn (test_core.Outputs.test_unconfirmed_object_not_drawn) ... ok
+test_same_photo_cannot_be_attached_twice_to_one_object (test_core.PhotoRules.test_same_photo_cannot_be_attached_twice_to_one_object) ... ok
 test_derived_scene_does_not_mutate_source (test_core.SceneTests.test_derived_scene_does_not_mutate_source) ... ok
 test_requires_approval (test_core.SceneTests.test_requires_approval) ... ok
 test_source_change_leaves_scene_stale_detectable (test_core.SceneTests.test_source_change_leaves_scene_stale_detectable) ... ok
@@ -35,8 +40,11 @@ test_missing_photo_and_annotation (test_core.Validation.test_missing_photo_and_a
 test_missing_required_dimension (test_core.Validation.test_missing_required_dimension) ... ok
 test_unit_mix_equal_geometry (test_core.Validation.test_unit_mix_equal_geometry) ... ok
 test_unknown_dimension_key (test_core.Validation.test_unknown_dimension_key) ... ok
+test_non_box_shape_cannot_be_registered (test_interference_cases.Cases.test_non_box_shape_cannot_be_registered) ... ok
+test_space_without_basis_rejected (test_interference_cases.Cases.test_space_without_basis_rejected) ... ok
+test_table (test_interference_cases.Cases.test_table) ... ok
 
 ----------------------------------------------------------------------
-Ran 37 tests in 0.023s
+Ran 45 tests in 0.027s
 
 OK

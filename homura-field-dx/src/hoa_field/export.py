@@ -16,7 +16,9 @@ class ExportError(RuntimeError):
 
 def _banner(p: Project) -> str:
     a = p.current_approval()
-    return "" if a else "UNAPPROVED PREVIEW"
+    if not a:
+        return "UNAPPROVED PREVIEW"
+    return "DEV SIMULATED APPROVAL" if a.kind == "DEV_SIMULATED" else ""
 
 
 def atomic_write(path: Path, data: str) -> None:
@@ -93,22 +95,35 @@ def manifest(p: Project) -> dict:
         "approved": a is not None,
         "approved_version": a.approved_version if a else None,
         "approver": a.approver if a else None,
+        "approval_kind": a.kind if a else None,
+        "unit": "mm",
+        "geometry_mm": {oid: {k: str(v) for k, v in zip(("x0", "y0", "z0", "x1", "y1", "z1"),
+                              (b.x0, b.y0, b.z0, b.x1, b.y1, b.z1))}
+                        for oid, i in sorted(p.instances.items()) if (b := box_of(p, i)) is not None},
         "waivers": a.waivers if a else {},
         "unit": "mm",
         "objects": {oid: {"asset_object_id": oid, "definition": f"{i.definition_id}@v{i.definition_version}",
                           "photos": i.photo_ids} for oid, i in sorted(p.instances.items())},
         "interference": {"overall": overall(res),
-                         "results": [{"pair": r.pair_id, "status": r.status, "reason": r.reason} for r in res]},
+                         "results": [{"id": r.pair_id, "kind": r.kind, "status": r.status, "reason": r.reason,
+                                      "metrics": r.metrics} for r in res]},
         "validation": [{"severity": i.severity, "code": i.code, "object": i.object_id, "detail": i.detail}
                        for i in p.validate()],
-        "status_note": "UNAPPROVED PREVIEW" if a is None else "approved",
+        "status_note": "UNAPPROVED PREVIEW" if a is None else (
+            "approved (DEV SIMULATED - not a real-case approval)" if a.kind == "DEV_SIMULATED" else "approved (human final)"),
     }
+
+
+def export_files(p: Project) -> dict[str, str]:
+    """Pure: file name -> text. Same bytes for same input (idempotent)."""
+    return {"plan.svg": svg_plan(p), "model.obj": obj_model(p),
+            "snapshot.json": json.dumps(p.snapshot(), sort_keys=True),
+            "manifest.json": json.dumps(manifest(p), indent=2, sort_keys=True, ensure_ascii=False)}
 
 
 def export_all(p: Project, outdir: Path) -> list[Path]:
     outdir.mkdir(parents=True, exist_ok=True)
-    files = {"plan.svg": svg_plan(p), "model.obj": obj_model(p),
-             "manifest.json": json.dumps(manifest(p), indent=2, sort_keys=True, ensure_ascii=False)}
+    files = export_files(p)
     written = []
     for name, data in files.items():
         atomic_write(outdir / name, data)

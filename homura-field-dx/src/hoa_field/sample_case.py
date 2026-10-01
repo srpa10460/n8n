@@ -1,8 +1,11 @@
 """Representative case 1 (SYNTHETIC, not client data): washroom refit with 3 objects."""
 from decimal import Decimal as D
 
-from .catalog import Catalog, DimensionSpec, ObjectDefinition
+from .catalog import Catalog, DimensionSpec, ObjectDefinition, ServiceSpace
 from .project import Project, Source
+
+
+SYN = "SYNTHETIC test value for dev case; not a design standard or manufacturer spec"
 
 
 def _dims(wmax="3000", dmax="1500", hmax="2500"):
@@ -17,12 +20,15 @@ def build_catalog() -> Catalog:
     c = Catalog()
     c.publish(ObjectDefinition("vanity", "Vanity unit", "sanitary", _dims(),
                                required_photos=("front", "wall-context"),
-                               required_annotations=("plumbing-position",), clearance_mm=None))
+                               required_annotations=("plumbing-position",),
+                               required_spaces=(ServiceSpace("service", "front", D("500"), SYN),)))
     c.publish(ObjectDefinition("wall-cabinet", "Wall cabinet", "storage", _dims(),
-                               required_photos=("front",), clearance_mm=D("50")))
+                               required_photos=("front",), has_opening=True,
+                               required_spaces=(ServiceSpace("opening", "front", D("300"), SYN),)))
     c.publish(ObjectDefinition("washer", "Washing machine", "appliance", _dims(),
                                required_photos=("front", "wall-context"),
-                               required_annotations=("drain-position",), clearance_mm=D("20")))
+                               required_annotations=("drain-position",),
+                               required_spaces=(ServiceSpace("service", "front", D("100"), SYN),)))
     return c
 
 

@@ -1,0 +1,188 @@
+{
+  "vanity": [
+    {
+      "category": "sanitary",
+      "definition_id": "vanity",
+      "dimensions": [
+        {
+          "axis": "x",
+          "datum": "本体外寸 左端〜右端 (高さ中央)",
+          "key": "width",
+          "label": "幅",
+          "max_mm": "3000",
+          "method": "スチールテープ",
+          "min_mm": "10",
+          "required": true,
+          "source": "client-defined",
+          "tolerance_mm": "2"
+        },
+        {
+          "axis": "y",
+          "datum": "壁面〜最前面 (幅中央)",
+          "key": "depth",
+          "label": "奥行",
+          "max_mm": "3000",
+          "method": "スチールテープ",
+          "min_mm": "10",
+          "required": true,
+          "source": "client-defined",
+          "tolerance_mm": "2"
+        },
+        {
+          "axis": "z",
+          "datum": "床面〜天板上面 (幅中央)",
+          "key": "height",
+          "label": "高さ",
+          "max_mm": "3000",
+          "method": "スチールテープ",
+          "min_mm": "10",
+          "required": true,
+          "source": "client-defined",
+          "tolerance_mm": "2"
+        }
+      ],
+      "has_opening": false,
+      "name": "洗面台ユニット",
+      "required_annotations": [
+        "plumbing-position"
+      ],
+      "required_photos": [
+        "front",
+        "wall-context"
+      ],
+      "required_spaces": [
+        {
+          "basis": "SYNTHETIC test value (dev); not a spec",
+          "depth_mm": "500",
+          "kind": "service",
+          "side": "front"
+        }
+      ],
+      "shape_template": "box",
+      "version": 1
+    }
+  ],
+  "wall-cabinet": [
+    {
+      "category": "storage",
+      "definition_id": "wall-cabinet",
+      "dimensions": [
+        {
+          "axis": "x",
+          "datum": "outer left edge to outer right edge, at mid-height",
+          "key": "width",
+          "label": "Width",
+          "max_mm": "3000",
+          "method": "steel tape (1 mm graduation)",
+          "min_mm": "10",
+          "required": true,
+          "source": "client-defined",
+          "tolerance_mm": "2"
+        },
+        {
+          "axis": "y",
+          "datum": "wall surface to front-most point, at mid-width",
+          "key": "depth",
+          "label": "Depth",
+          "max_mm": "1500",
+          "method": "steel tape (1 mm graduation)",
+          "min_mm": "10",
+          "required": true,
+          "source": "client-defined",
+          "tolerance_mm": "2"
+        },
+        {
+          "axis": "z",
+          "datum": "bottom edge to top edge, at mid-width",
+          "key": "height",
+          "label": "Height",
+          "max_mm": "2500",
+          "method": "steel tape (1 mm graduation)",
+          "min_mm": "10",
+          "required": true,
+          "source": "client-defined",
+          "tolerance_mm": "2"
+        }
+      ],
+      "has_opening": true,
+      "name": "Wall cabinet",
+      "required_annotations": [],
+      "required_photos": [
+        "front"
+      ],
+      "required_spaces": [
+        {
+          "basis": "SYNTHETIC test value for dev case; not a design standard or manufacturer spec",
+          "depth_mm": "300",
+          "kind": "opening",
+          "side": "front"
+        }
+      ],
+      "shape_template": "box",
+      "version": 1
+    }
+  ],
+  "washer": [
+    {
+      "category": "appliance",
+      "definition_id": "washer",
+      "dimensions": [
+        {
+          "axis": "x",
+          "datum": "outer left edge to outer right edge, at mid-height",
+          "key": "width",
+          "label": "Width",
+          "max_mm": "3000",
+          "method": "steel tape (1 mm graduation)",
+          "min_mm": "10",
+          "required": true,
+          "source": "client-defined",
+          "tolerance_mm": "2"
+        },
+        {
+          "axis": "y",
+          "datum": "wall surface to front-most point, at mid-width",
+          "key": "depth",
+          "label": "Depth",
+          "max_mm": "1500",
+          "method": "steel tape (1 mm graduation)",
+          "min_mm": "10",
+          "required": true,
+          "source": "client-defined",
+          "tolerance_mm": "2"
+        },
+        {
+          "axis": "z",
+          "datum": "bottom edge to top edge, at mid-width",
+          "key": "height",
+          "label": "Height",
+          "max_mm": "2500",
+          "method": "steel tape (1 mm graduation)",
+          "min_mm": "10",
+          "required": true,
+          "source": "client-defined",
+          "tolerance_mm": "2"
+        }
+      ],
+      "has_opening": false,
+      "name": "Washing machine",
+      "required_annotations": [
+        "drain-position"
+      ],
+      "required_photos": [
+        "front",
+        "wall-context"
+      ],
+      "required_spaces": [
+        {
+          "basis": "SYNTHETIC test value for dev case; not a design standard or manufacturer spec",
+          "depth_mm": "100",
+          "kind": "service",
+          "side": "front"
+        }
+      ],
+      "shape_template": "box",
+      "version": 1
+    }
+  ]
+}
