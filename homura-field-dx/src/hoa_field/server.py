@@ -146,7 +146,9 @@ class Handler(BaseHTTPRequestHandler):
         if m == "GET" and path == "/api/ping":
             return self.jsend({"ok": True, "dev_auth": st.dev_auth, "server_time": time.time()})
         if m == "GET" and path == "/precache.json":
-            files = ["/", "/app.js", "/db.js", "/sync.js", "/bridge.js", "/manifest.webmanifest"]
+            # /py/manifest.json must be cached: bridge.load() fetches it on every boot.
+            files = ["/", "/app.js", "/db.js", "/sync.js", "/bridge.js", "/manifest.webmanifest",
+                     "/py/manifest.json"]
             files += ["/py/" + f.name for f in sorted(SRC.glob("*.py")) if f.name != "server.py"]
             pyo = ROOT / "static" / "vendor" / "pyodide"
             files += ["/vendor/pyodide/" + f.name for f in sorted(pyo.glob("*"))] if pyo.exists() else []
