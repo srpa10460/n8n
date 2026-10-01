@@ -1,0 +1,72 @@
+{
+  "approved": true,
+  "approved_version": 23,
+  "approver": "Daiki Isa (SIMULATED approval for dev test; not a real review)",
+  "content_hash": "20cbc12bfe67efc31de767e88752cf2fc2fac348a675eea7548d719ccc023022",
+  "data_version": 23,
+  "interference": {
+    "overall": "PASS",
+    "results": [
+      {
+        "pair": "O-VAN@room",
+        "reason": "inside room",
+        "status": "PASS"
+      },
+      {
+        "pair": "O-WCB@room",
+        "reason": "inside room",
+        "status": "PASS"
+      },
+      {
+        "pair": "O-WSH@room",
+        "reason": "inside room",
+        "status": "PASS"
+      },
+      {
+        "pair": "O-VAN|O-WCB",
+        "reason": "gap 650.000 mm >= required 50 mm",
+        "status": "PASS"
+      },
+      {
+        "pair": "O-VAN|O-WSH",
+        "reason": "gap 250.000 mm >= required 20 mm",
+        "status": "PASS"
+      },
+      {
+        "pair": "O-WCB|O-WSH",
+        "reason": "gap 500.000 mm >= required 50 mm",
+        "status": "PASS"
+      }
+    ]
+  },
+  "objects": {
+    "O-VAN": {
+      "asset_object_id": "O-VAN",
+      "definition": "vanity@v1",
+      "photos": [
+        "A-O-VAN-front",
+        "A-O-VAN-ctx"
+      ]
+    },
+    "O-WCB": {
+      "asset_object_id": "O-WCB",
+      "definition": "wall-cabinet@v1",
+      "photos": [
+        "A-O-WCB-front"
+      ]
+    },
+    "O-WSH": {
+      "asset_object_id": "O-WSH",
+      "definition": "washer@v1",
+      "photos": [
+        "A-O-WSH-front",
+        "A-O-WSH-ctx"
+      ]
+    }
+  },
+  "project_id": "P-0001",
+  "status_note": "approved",
+  "unit": "mm",
+  "validation": [],
+  "waivers": {}
+}
