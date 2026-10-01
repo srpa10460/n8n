@@ -1,0 +1,180 @@
+{
+  "approval_kind": null,
+  "approved": false,
+  "approved_version": null,
+  "approver": null,
+  "content_hash": "b4ded07a9e2bce6d8820dc47fd8fa37648a3a3a608c9eec2e9481029b9c52123",
+  "data_version": 23,
+  "geometry_mm": {
+    "O-VAN": {
+      "x0": "0.000",
+      "x1": "750.000",
+      "y0": "0.000",
+      "y1": "550.000",
+      "z0": "0.000",
+      "z1": "850.000"
+    },
+    "O-WCB": {
+      "x0": "0.000",
+      "x1": "750.000",
+      "y0": "0.000",
+      "y1": "200.000",
+      "z0": "1500.000",
+      "z1": "2200.000"
+    },
+    "O-WSH": {
+      "x0": "1000.000",
+      "x1": "1640.000",
+      "y0": "0.000",
+      "y1": "600.000",
+      "z0": "0.000",
+      "z1": "1000.000"
+    }
+  },
+  "interference": {
+    "overall": "PASS",
+    "results": [
+      {
+        "id": "O-VAN@room",
+        "kind": "ROOM",
+        "metrics": {},
+        "reason": "inside room",
+        "status": "PASS"
+      },
+      {
+        "id": "O-WCB@room",
+        "kind": "ROOM",
+        "metrics": {},
+        "reason": "inside room",
+        "status": "PASS"
+      },
+      {
+        "id": "O-WSH@room",
+        "kind": "ROOM",
+        "metrics": {},
+        "reason": "inside room",
+        "status": "PASS"
+      },
+      {
+        "id": "O-VAN|O-WCB#overlap",
+        "kind": "OVERLAP",
+        "metrics": {
+          "contact": false
+        },
+        "reason": "no overlap",
+        "status": "PASS"
+      },
+      {
+        "id": "O-VAN|O-WCB#distance",
+        "kind": "DISTANCE",
+        "metrics": {
+          "euclid_mm": "650.000",
+          "gaps": [
+            "-750.000",
+            "-200.000",
+            "650.000"
+          ]
+        },
+        "reason": "distance 650.000 mm (axis gaps x/y/z -750.000/-200.000/650.000)",
+        "status": "INFO"
+      },
+      {
+        "id": "O-VAN|O-WSH#overlap",
+        "kind": "OVERLAP",
+        "metrics": {
+          "contact": false
+        },
+        "reason": "no overlap",
+        "status": "PASS"
+      },
+      {
+        "id": "O-VAN|O-WSH#distance",
+        "kind": "DISTANCE",
+        "metrics": {
+          "euclid_mm": "250.000",
+          "gaps": [
+            "250.000",
+            "-550.000",
+            "-850.000"
+          ]
+        },
+        "reason": "distance 250.000 mm (axis gaps x/y/z 250.000/-550.000/-850.000)",
+        "status": "INFO"
+      },
+      {
+        "id": "O-WCB|O-WSH#overlap",
+        "kind": "OVERLAP",
+        "metrics": {
+          "contact": false
+        },
+        "reason": "no overlap",
+        "status": "PASS"
+      },
+      {
+        "id": "O-WCB|O-WSH#distance",
+        "kind": "DISTANCE",
+        "metrics": {
+          "euclid_mm": "559.017",
+          "gaps": [
+            "250.000",
+            "-200.000",
+            "500.000"
+          ]
+        },
+        "reason": "distance 559.017 mm (axis gaps x/y/z 250.000/-200.000/500.000)",
+        "status": "INFO"
+      },
+      {
+        "id": "O-VAN#service-front",
+        "kind": "SERVICE",
+        "metrics": {},
+        "reason": "space free (500 mm, basis: SYNTHETIC test value for dev case; not a design standard or manufacturer spec)",
+        "status": "PASS"
+      },
+      {
+        "id": "O-WCB#opening-front",
+        "kind": "OPENING",
+        "metrics": {},
+        "reason": "space free (300 mm, basis: SYNTHETIC test value for dev case; not a design standard or manufacturer spec)",
+        "status": "PASS"
+      },
+      {
+        "id": "O-WSH#service-front",
+        "kind": "SERVICE",
+        "metrics": {},
+        "reason": "space free (100 mm, basis: SYNTHETIC test value for dev case; not a design standard or manufacturer spec)",
+        "status": "PASS"
+      }
+    ]
+  },
+  "objects": {
+    "O-VAN": {
+      "asset_object_id": "O-VAN",
+      "definition": "vanity@v1",
+      "photos": [
+        "A-O-VAN-front",
+        "A-O-VAN-ctx"
+      ]
+    },
+    "O-WCB": {
+      "asset_object_id": "O-WCB",
+      "definition": "wall-cabinet@v1",
+      "photos": [
+        "A-O-WCB-front"
+      ]
+    },
+    "O-WSH": {
+      "asset_object_id": "O-WSH",
+      "definition": "washer@v1",
+      "photos": [
+        "A-O-WSH-front",
+        "A-O-WSH-ctx"
+      ]
+    }
+  },
+  "project_id": "P-0001",
+  "status_note": "UNAPPROVED PREVIEW",
+  "unit": "mm",
+  "validation": [],
+  "waivers": {}
+}

@@ -1,0 +1,7 @@
+# Dev/test/production-of-media tooling only. The runtime (core + server) is Python stdlib only.
+# Versions that were actually used for the recorded Evidence (Python 3.11.15, Linux):
+playwright==1.63.0   # browser E2E; uses system Chromium via executable_path (do NOT run "playwright install")
+pymupdf==1.28.2      # placeholder photos for tests, PDF render/inspection
+pypdf==6.19.0        # PDF outline / link inspection
+reportlab==5.0.1     # PDF manual generation (if used)
+bpy==5.0.1           # Blender as a Python module (PyPI, free) for B

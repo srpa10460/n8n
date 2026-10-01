@@ -1,0 +1,102 @@
+{
+ "source_hash": "b4ded07a9e2bce6d8820dc47fd8fa37648a3a3a608c9eec2e9481029b9c52123",
+ "data_version": 23,
+ "approval_kind": "DEV_SIMULATED",
+ "bpy": "4.2.2 LTS",
+ "objects": {
+  "O-VAN": {
+   "dimensions_mm": [
+    550.0,
+    750.0,
+    850.0
+   ],
+   "min_corner_mm": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "O-WCB": {
+   "dimensions_mm": [
+    200.0,
+    700.0,
+    750.0
+   ],
+   "min_corner_mm": [
+    0.0,
+    0.0,
+    1500.0
+   ]
+  },
+  "O-WSH": {
+   "dimensions_mm": [
+    600.0,
+    640.0,
+    1000.0
+   ],
+   "min_corner_mm": [
+    1000.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "checks": [
+  {
+   "name": "O-VAN: Blender dimensions == snapshot measured values (mm)",
+   "pass": true,
+   "detail": "([550.0, 750.0, 850.0], [550.0, 750.0, 850.0])"
+  },
+  {
+   "name": "O-VAN: placement min corner == snapshot placement (mm)",
+   "pass": true,
+   "detail": "((0.0, 0.0, 0.0), {'rot': 0, 'x': '0.000', 'y': '0.000', 'z': '0.000'})"
+  },
+  {
+   "name": "O-WCB: Blender dimensions == snapshot measured values (mm)",
+   "pass": true,
+   "detail": "([200.0, 700.0, 750.0], [200.0, 700.0, 750.0])"
+  },
+  {
+   "name": "O-WCB: placement min corner == snapshot placement (mm)",
+   "pass": true,
+   "detail": "((0.0, 0.0, 1500.0000298023224), {'rot': 0, 'x': '0.000', 'y': '0.000', 'z': '1500.000'})"
+  },
+  {
+   "name": "O-WSH: Blender dimensions == snapshot measured values (mm)",
+   "pass": true,
+   "detail": "([600.0, 640.0, 1000.0], [600.0, 640.0, 1000.0])"
+  },
+  {
+   "name": "O-WSH: placement min corner == snapshot placement (mm)",
+   "pass": true,
+   "detail": "((1000.0000596046448, 0.0, 0.0), {'rot': 0, 'x': '1000.000', 'y': '0.000', 'z': '0.000'})"
+  },
+  {
+   "name": "all manifest objects present",
+   "pass": true,
+   "detail": "['O-VAN', 'O-WCB', 'O-WSH']"
+  },
+  {
+   "name": "derived scene did not move base objects",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "derived copy is separate (offset +350 mm only on O-WCB.derived)",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "source files unchanged by build",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "ffmpeg encoded orbit.mp4",
+   "pass": true,
+   "detail": ""
+  }
+ ],
+ "frames": 72
+}

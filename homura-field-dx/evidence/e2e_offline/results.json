@@ -1,0 +1,232 @@
+[
+ {
+  "name": "online prep: service worker + python core cached",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "catalog stored on device before going offline",
+  "pass": true,
+  "detail": "vanity,wall-cabinet,washer"
+ },
+ {
+  "name": "offline boot from cache; header says offline",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "estimate labelled 写真推定",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "30 in -> 762.000 mm (unit conversion offline)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "auto-draw notice present",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "dev-simulated approval labelled",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "offline export manifest approved + hash",
+  "pass": true,
+  "detail": "744a781dbbcd467140e8e189e9980fbff6f9626c53a26d45ebf8b502eacdd6dd"
+ },
+ {
+  "name": "sync button disabled offline with 接続後に処理",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "status: 端末保存済み + 未送信",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "restart: project restored",
+  "pass": true,
+  "detail": "v24"
+ },
+ {
+  "name": "restart: 5 attached photos restored and decodable",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "restart: measurement restored (762.000 mm)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "restart: approval still current for this version",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "server requires auth (401 without token)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "no auto-send: server has nothing yet",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "server received: rev1 + hash equals device hash",
+  "pass": true,
+  "detail": "744a781dbbcd467140e8e189e9980fbff6f9626c53a26d45ebf8b502eacdd6dd"
+ },
+ {
+  "name": "server holds all 5 photos with matching sha",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "cut during upload: failure + reason shown",
+  "pass": true,
+  "detail": "案件\t状態\t詳細 / 失敗理由\t操作\nP-0001\t端末保存済み v25 送信失敗\t通信できない/途中で切断: Failed to fetch\n試行 2回\t再試行"
+ },
+ {
+  "name": "cut during upload: server NOT marked received (still rev1)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "cut during upload: local data kept",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "retry: rev2 exactly once, 6 assets (no duplicates)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "replayed commit is idempotent (same rev)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "edit during send: 送信中 + 新しい未送信版 shown",
+  "pass": true,
+  "detail": "P-0001\t端末保存済み v27 送信中 v26 (写真 1/1) 新しい未送信版 v27\t試行 4回\t送信"
+ },
+ {
+  "name": "after send: received rev3 AND newer change still 未送信",
+  "pass": true,
+  "detail": "P-0001\t端末保存済み v27 未送信 (最終受領 rev3/v26)\t試行 4回\t送信"
+ },
+ {
+  "name": "auth expired: reason shown, unsent data kept",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "after re-login: retry succeeds (rev4)",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "other device wrote rev5",
+  "pass": true,
+  "detail": "5"
+ },
+ {
+  "name": "conflict: not overwritten on server",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "conflict: diff shows both values",
+  "pass": true,
+  "detail": "項目\tこの端末\tサーバー\nobjects.O-VAN.measurements.depth.input\t\"555 mm\"\t\"560 mm\"\nobjects.O-VAN.measurements.depth.mm\t\"555.000\"\t\"560.000\""
+ },
+ {
+  "name": "override: rev6 and other device's rev5 kept in history",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "adopt server: local version backed up on device",
+  "pass": true,
+  "detail": "['conflict-backup/P-0001/1790848952481']"
+ },
+ {
+  "name": "adopt server: server value (570) now on device",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "adopt: state received",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "quota: 保存失敗 shown, header not 'saved'",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "quota: photo save failure reported",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "quota: failed edit not persisted after reload",
+  "pass": true,
+  "detail": "幅 *\nwidth\n\tx\t本体外寸 左端〜右端 (高さ中央) / スチールテープ / ±2mm / 10〜3000mm\n出典: client-defined\t762.000 mm\n入力: 30 in\n\t実測\t \nmm\ncm\nm\nin\nft\n \n実測\n写真推定\n  入力"
+ },
+ {
+  "name": "quota: failed photo not persisted",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "name": "backup file written",
+  "pass": true,
+  "detail": "61683"
+ },
+ {
+  "name": "import: projects + all photos restored on a new profile",
+  "pass": true,
+  "detail": "(['P-0001/A-0bdf8c8fb606', 'P-0001/A-6aac728ef82f', 'P-0001/A-90cf4161cb9c', 'P-0001/A-b23fda158af8', 'P-0001/A-b53b64be2f20', 'P-0001/A-dd03369933fb', 'P-0001/A-e4fbf2c3b047'], ['P-0001/A-0bdf8c8fb606', 'P-0001/A-6aac728ef82f', 'P-0001/A-90cf4161cb9c', 'P-0001/A-b23fda158af8', 'P-0001/A-b53b64be2f2"
+ },
+ {
+  "name": "no JS page errors",
+  "pass": true,
+  "detail": "[]"
+ },
+ {
+  "name": "F-1: Guardian payload does not set window.__pwn",
+  "pass": true,
+  "detail": "{'pwn': None, 'pubErr': 'ValueError: invalid dimension key: use letters, digits, _ . - (max 64)', 'clickErr': None, 'needIdRejected': True, 'uiRejected': True, 'err': 'invalid dimension key: rejected (Fail Closed)', 'hasInlineOnclick': 0}"
+ },
+ {
+  "name": "F-1: needId Fail Closed on Guardian payload",
+  "pass": true,
+  "detail": "{'pwn': None, 'pubErr': 'ValueError: invalid dimension key: use letters, digits, _ . - (max 64)', 'clickErr': None, 'needIdRejected': True, 'uiRejected': True, 'err': 'invalid dimension key: rejected (Fail Closed)', 'hasInlineOnclick': 0}"
+ },
+ {
+  "name": "F-1: malicious catalog publish rejected",
+  "pass": true,
+  "detail": "ValueError: invalid dimension key: use letters, digits, _ . - (max 64)"
+ },
+ {
+  "name": "F-1: UI click rejects bad key without JS exec",
+  "pass": true,
+  "detail": "{'pwn': None, 'pubErr': 'ValueError: invalid dimension key: use letters, digits, _ . - (max 64)', 'clickErr': None, 'needIdRejected': True, 'uiRejected': True, 'err': 'invalid dimension key: rejected (Fail Closed)', 'hasInlineOnclick': 0}"
+ },
+ {
+  "name": "F-1: no inline onclick handlers in DOM",
+  "pass": true,
+  "detail": "{'pwn': None, 'pubErr': 'ValueError: invalid dimension key: use letters, digits, _ . - (max 64)', 'clickErr': None, 'needIdRejected': True, 'uiRejected': True, 'err': 'invalid dimension key: rejected (Fail Closed)', 'hasInlineOnclick': 0}"
+ }
+]

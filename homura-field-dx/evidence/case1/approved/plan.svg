@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="520" viewBox="-40 -40 560 520" font-family="sans-serif" font-size="12">
+<rect x="0" y="0" width="480.0" height="360.0" fill="none" stroke="#222" stroke-width="2"/>
+<text x="0" y="-12">P-0001  data v23  hash b4ded07a9e2b</text>
+<g data-object-id="O-VAN"><rect x="0.0" y="0.0" width="150.0" height="110.0" fill="#cfe3ff" fill-opacity="0.45" stroke="#036"/><text x="4.0" y="14.0">1</text></g>
+<g data-object-id="O-WCB"><rect x="0.0" y="0.0" width="150.0" height="40.0" fill="#cfe3ff" fill-opacity="0.45" stroke="#036" stroke-dasharray="5 3"/><text x="4.0" y="28.0">2</text></g>
+<g data-object-id="O-WSH"><rect x="200.0" y="0.0" width="128.0" height="120.0" fill="#cfe3ff" fill-opacity="0.45" stroke="#036"/><text x="204.0" y="14.0">3</text></g>
+<text x="0" y="382">1: O-VAN Vanity  750.000 x 550.000 mm, z 0.000-850.000</text>
+<text x="0" y="398">2: O-WCB Wall cabinet  750.000 x 200.000 mm, z 1500.000-2200.000 (dashed = elevated)</text>
+<text x="0" y="414">3: O-WSH Washer  640.000 x 600.000 mm, z 0.000-1000.000</text>
+<text x="240" y="180" text-anchor="middle" font-size="40" fill="#e00" fill-opacity="0.35">DEV SIMULATED APPROVAL</text>
+<text x="0" y="430">interference: PASS (see manifest)</text></svg>

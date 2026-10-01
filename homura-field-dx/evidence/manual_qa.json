@@ -1,0 +1,113 @@
+{
+ "pages": 29,
+ "checks": [
+  {
+   "name": "outline (bookmarks) present, >= 14 sections",
+   "pass": true,
+   "detail": "16"
+  },
+  {
+   "name": "every bookmark resolves to a page",
+   "pass": true,
+   "detail": "{'HOMURA Interior Field DX現場アプリ 操作マニュアル': 0, '目次': 1, '1. このマニュアルについて': 2, '2. 最初の準備(オンラインが必要です)': 3, '3. 案件を作成する': 4, '4. 対象物Catalogを登録する': 5, '5. 対象物を追加し配置する': 6, '6. 寸法を入力する': 7, '7. 写真と注記': 9, '8. 検証結果を読む': 11, '9. 作図プレビュー': 13, '10. レビューと承認': 14, '11. 出力': 17, '12. オフライン作業と送信': 18, '13. トラブル対応'"
+  },
+  {
+   "name": "bookmarks go forward in page order",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "internal link annotations exist (TOC 14 + back-links 14)",
+   "pass": true,
+   "detail": "28"
+  },
+  {
+   "name": "every internal link resolves to a page",
+   "pass": true,
+   "detail": "[]"
+  },
+  {
+   "name": "TOC links point to 14 distinct section pages",
+   "pass": true,
+   "detail": "14"
+  },
+  {
+   "name": "TOC link targets == bookmark pages",
+   "pass": true,
+   "detail": "([2, 3, 4, 5, 6, 7, 9, 11, 13, 14, 17, 18, 22, 28], [0, 1, 2, 3, 4, 5, 6, 7, 9, 11, 13, 14, 17, 18, 22, 28])"
+  },
+  {
+   "name": "text extractable: 現場アプリ 操作マニュアル",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "text extractable: 写真からの自動作図・自動寸法抽出は未実装",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "text extractable: サーバー受領済み",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "text extractable: 開発模擬承認",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "text extractable: 762.000 mm",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "no replacement/missing-glyph characters",
+   "pass": true,
+   "detail": ""
+  },
+  {
+   "name": "fonts embedded (emb=yes for all)",
+   "pass": true,
+   "detail": "yes yes    157  0\nKAAAAA+HiraginoSans-W6               Type 3            Custom           yes yes yes    187  0\nKAAAAA+HiraginoSans-W6               Type 3            Custom           yes yes yes    188  0\nKAAAAA+HiraginoSans-W6               Type 3            Custom           yes yes yes    189  0\n"
+  },
+  {
+   "name": "screenshots embedded (>= 17 images)",
+   "pass": true,
+   "detail": "19"
+  },
+  {
+   "name": "screenshot effective resolution >= 100 ppi",
+   "pass": true,
+   "detail": "(140, 185)"
+  },
+  {
+   "name": "no blank pages",
+   "pass": true,
+   "detail": "[]"
+  },
+  {
+   "name": "page count",
+   "pass": true,
+   "detail": "29"
+  }
+ ],
+ "bookmark_pages": {
+  "HOMURA Interior Field DX現場アプリ 操作マニュアル": 0,
+  "目次": 1,
+  "1. このマニュアルについて": 2,
+  "2. 最初の準備(オンラインが必要です)": 3,
+  "3. 案件を作成する": 4,
+  "4. 対象物Catalogを登録する": 5,
+  "5. 対象物を追加し配置する": 6,
+  "6. 寸法を入力する": 7,
+  "7. 写真と注記": 9,
+  "8. 検証結果を読む": 11,
+  "9. 作図プレビュー": 13,
+  "10. レビューと承認": 14,
+  "11. 出力": 17,
+  "12. オフライン作業と送信": 18,
+  "13. トラブル対応": 22,
+  "14. 既知の制約": 28
+ }
+}
