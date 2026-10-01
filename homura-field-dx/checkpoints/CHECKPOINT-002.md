@@ -1,7 +1,7 @@
 # CHECKPOINT-002  (supersedes CHECKPOINT-001; read AGENTS.md first)
 
 ## Where
-- Repo: srpa10460/n8n (upstream n8n fork). Branch: `claude/cool-meitner-1tymfk` (pushed). Project dir: `homura-field-dx/`. No PR created (not requested).
+- Repo: srpa10460/n8n (upstream n8n fork). Branch: `claude/cool-meitner-1tymfk` (pushed). Project dir: `homura-field-dx/`. PR: https://github.com/srpa10460/n8n/pull/1 (created from the Claude Code UI; pushing to the branch updates it). Note: it targets the n8n fork, so n8n's general PR checks run on it; nothing in this dir is part of n8n.
 - Commits on the branch after upstream base 96d3faf3: 3287cb36 (core, CHECKPOINT-001) > a9c7d7a5 (offline-first PWA, sync, interference redesign) > a6999f73 (handoff docs) > the final commit of this checkpoint (B, manual, billing sim, docs; `git log --oneline -6`).
 - Files outside `homura-field-dx/` changed vs base: 0 (see docs/n8n_impact_and_migration.md; migration is only a proposal, not executed).
 
