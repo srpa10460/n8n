@@ -66,5 +66,13 @@
   "f4": "OPEN / KNOWN / PRODUCTION GATE",
   "f5": "AGENTS.md monitoring write policy updated; docs/pr_monitor_log.md historical only",
   "n8n_core_changed": false,
-  "new_head": "1d1117a19067198b8451b81115e310e78cdb2312"
+  "new_head": "7a6817ea9bcc311c32dc77033d22ad08073afbdb",
+  "precache_manifest_fix": "7a6817ea9bcc311c32dc77033d22ad08073afbdb",
+  "verdict": {
+    "F-1": "CLOSED",
+    "F-2": "CLOSED",
+    "F-3": "CLOSED",
+    "F-5": "CLOSED",
+    "F-4": "OPEN / KNOWN / PRODUCTION GATE"
+  }
 }
