@@ -157,7 +157,7 @@
  {
   "name": "adopt server: local version backed up on device",
   "pass": true,
-  "detail": "['conflict-backup/P-0001/1790844046621']"
+  "detail": "['conflict-backup/P-0001/1790844212355']"
  },
  {
   "name": "adopt server: server value (570) now on device",

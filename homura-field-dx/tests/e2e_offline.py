@@ -10,7 +10,8 @@ from playwright.sync_api import sync_playwright, expect
 from hoa_field.server import make_server, Handler
 from hoa_field.engine import call
 
-CHROME = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"
+import os
+CHROME = os.environ.get("HOA_CHROME", "/opt/pw-browsers/chromium-1194/chrome-linux/chrome")
 SHOTS = ROOT / "docs" / "screens"; SHOTS.mkdir(parents=True, exist_ok=True)
 PORT = 8793; BASE = f"http://127.0.0.1:{PORT}"
 results = []
