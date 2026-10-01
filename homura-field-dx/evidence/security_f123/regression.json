@@ -65,5 +65,6 @@
   "f3": null,
   "f4": "OPEN / KNOWN / PRODUCTION GATE",
   "f5": "AGENTS.md monitoring write policy updated; docs/pr_monitor_log.md historical only",
-  "n8n_core_changed": false
+  "n8n_core_changed": false,
+  "new_head": "1d1117a19067198b8451b81115e310e78cdb2312"
 }
