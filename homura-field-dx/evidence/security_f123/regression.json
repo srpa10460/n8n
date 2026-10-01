@@ -1,0 +1,69 @@
+{
+  "base_head": "c16a5d3a1902abac9bac434a0d00c1d9ae95ff51",
+  "commands": {
+    "unit": "cd homura-field-dx && PYTHONPATH=src python3 -m unittest discover -s tests -v",
+    "e2e": "cd homura-field-dx && HOA_CHROME=<chromium> .venv/bin/python tests/e2e_offline.py",
+    "blender": "Blender --background --python /tmp/run_blender_build.py",
+    "manual_qa": "cd homura-field-dx && .venv/bin/python scripts/qa_manual.py"
+  },
+  "exit_codes": {
+    "unit": 0,
+    "e2e": 0,
+    "blender": 0,
+    "manual_qa": 0
+  },
+  "counts": {
+    "unit": {
+      "ran": 73,
+      "ok": 73
+    },
+    "e2e": {
+      "ran": 46,
+      "pass": 46
+    },
+    "blender": {
+      "checks": 11,
+      "pass": 11
+    },
+    "manual_qa": {
+      "checks": 18,
+      "pass": 18
+    }
+  },
+  "f1": {
+    "payloads": null,
+    "catalog_from_dict": null,
+    "e2e": [
+      {
+        "name": "F-1: Guardian payload does not set window.__pwn",
+        "pass": true,
+        "detail": "{'pwn': None, 'pubErr': 'ValueError: invalid dimension key: use letters, digits, _ . - (max 64)', 'clickErr': None, 'needIdRejected': True, 'uiRejected': True, 'err': 'invalid dimension key: rejected (Fail Closed)', 'hasInlineOnclick': 0}"
+      },
+      {
+        "name": "F-1: needId Fail Closed on Guardian payload",
+        "pass": true,
+        "detail": "{'pwn': None, 'pubErr': 'ValueError: invalid dimension key: use letters, digits, _ . - (max 64)', 'clickErr': None, 'needIdRejected': True, 'uiRejected': True, 'err': 'invalid dimension key: rejected (Fail Closed)', 'hasInlineOnclick': 0}"
+      },
+      {
+        "name": "F-1: malicious catalog publish rejected",
+        "pass": true,
+        "detail": "ValueError: invalid dimension key: use letters, digits, _ . - (max 64)"
+      },
+      {
+        "name": "F-1: UI click rejects bad key without JS exec",
+        "pass": true,
+        "detail": "{'pwn': None, 'pubErr': 'ValueError: invalid dimension key: use letters, digits, _ . - (max 64)', 'clickErr': None, 'needIdRejected': True, 'uiRejected': True, 'err': 'invalid dimension key: rejected (Fail Closed)', 'hasInlineOnclick': 0}"
+      },
+      {
+        "name": "F-1: no inline onclick handlers in DOM",
+        "pass": true,
+        "detail": "{'pwn': None, 'pubErr': 'ValueError: invalid dimension key: use letters, digits, _ . - (max 64)', 'clickErr': None, 'needIdRejected': True, 'uiRejected': True, 'err': 'invalid dimension key: rejected (Fail Closed)', 'hasInlineOnclick': 0}"
+      }
+    ]
+  },
+  "f2": null,
+  "f3": null,
+  "f4": "OPEN / KNOWN / PRODUCTION GATE",
+  "f5": "AGENTS.md monitoring write policy updated; docs/pr_monitor_log.md historical only",
+  "n8n_core_changed": false
+}

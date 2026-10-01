@@ -157,7 +157,7 @@
  {
   "name": "adopt server: local version backed up on device",
   "pass": true,
-  "detail": "['conflict-backup/P-0001/1790844802247']"
+  "detail": "['conflict-backup/P-0001/1790848952481']"
  },
  {
   "name": "adopt server: server value (570) now on device",
@@ -203,5 +203,30 @@
   "name": "no JS page errors",
   "pass": true,
   "detail": "[]"
+ },
+ {
+  "name": "F-1: Guardian payload does not set window.__pwn",
+  "pass": true,
+  "detail": "{'pwn': None, 'pubErr': 'ValueError: invalid dimension key: use letters, digits, _ . - (max 64)', 'clickErr': None, 'needIdRejected': True, 'uiRejected': True, 'err': 'invalid dimension key: rejected (Fail Closed)', 'hasInlineOnclick': 0}"
+ },
+ {
+  "name": "F-1: needId Fail Closed on Guardian payload",
+  "pass": true,
+  "detail": "{'pwn': None, 'pubErr': 'ValueError: invalid dimension key: use letters, digits, _ . - (max 64)', 'clickErr': None, 'needIdRejected': True, 'uiRejected': True, 'err': 'invalid dimension key: rejected (Fail Closed)', 'hasInlineOnclick': 0}"
+ },
+ {
+  "name": "F-1: malicious catalog publish rejected",
+  "pass": true,
+  "detail": "ValueError: invalid dimension key: use letters, digits, _ . - (max 64)"
+ },
+ {
+  "name": "F-1: UI click rejects bad key without JS exec",
+  "pass": true,
+  "detail": "{'pwn': None, 'pubErr': 'ValueError: invalid dimension key: use letters, digits, _ . - (max 64)', 'clickErr': None, 'needIdRejected': True, 'uiRejected': True, 'err': 'invalid dimension key: rejected (Fail Closed)', 'hasInlineOnclick': 0}"
+ },
+ {
+  "name": "F-1: no inline onclick handlers in DOM",
+  "pass": true,
+  "detail": "{'pwn': None, 'pubErr': 'ValueError: invalid dimension key: use letters, digits, _ . - (max 64)', 'clickErr': None, 'needIdRejected': True, 'uiRejected': True, 'err': 'invalid dimension key: rejected (Fail Closed)', 'hasInlineOnclick': 0}"
  }
 ]

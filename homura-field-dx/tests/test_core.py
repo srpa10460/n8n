@@ -11,9 +11,33 @@ from hoa_field.export import ExportError, export_all, manifest, svg_plan
 from hoa_field.scene import SceneError, derive_scene
 from hoa_field.sample_case import build_project, build_catalog
 
+def bound_approve(p, approver="Isa", waivers=None, kind="DEV_SIMULATED", confirmations=None, **kw):
+    """Approve with mandatory version+hash binding (F-2)."""
+    return p.approve(
+        approver,
+        waivers or {},
+        kind=kind,
+        expect_version=kw.get("expect_version", p.data_version),
+        expect_hash=kw.get("expect_hash", p.content_hash()),
+        confirmations=confirmations,
+    )
+
+
 
 def codes(p, sev="ERROR"):
     return {(i.code, i.object_id) for i in p.validate() if i.severity == sev}
+
+
+
+def do_approve(p, approver="Isa", waivers=None, kind="DEV_SIMULATED", confirmations=None,
+               expect_version=None, expect_hash=None):
+    """Test helper: bind expect_version/hash unless the test is deliberately omitting them."""
+    return p.approve(
+        approver, waivers, kind,
+        expect_version=p.data_version if expect_version is None else expect_version,
+        expect_hash=p.content_hash() if expect_hash is None else expect_hash,
+        confirmations=confirmations,
+    )
 
 
 class Units(unittest.TestCase):
@@ -159,32 +183,32 @@ class Approval(unittest.TestCase):
         p = build_project(); p.submit_for_review(); return p
 
     def test_approve_and_hash_bound(self):
-        p = self.ready(); a = p.approve("Isa")
+        p = self.ready(); a = do_approve(p, "Isa")
         self.assertIs(p.status, Status.APPROVED)
         self.assertIsNotNone(p.current_approval())
         self.assertEqual(a.content_hash, p.content_hash())
 
     def test_requires_review_and_named_approver(self):
         p = build_project()
-        with self.assertRaises(ApprovalError): p.approve("Isa")
+        with self.assertRaises(ApprovalError): do_approve(p, "Isa")
         p.submit_for_review()
-        with self.assertRaises(ApprovalError): p.approve("  ")
+        with self.assertRaises(ApprovalError): do_approve(p, "  ")
 
     def test_fail_cannot_be_approved_even_with_waiver(self):
         p = build_project(); p.place("O-WSH", "700", "0"); p.submit_for_review()
-        with self.assertRaises(ApprovalError): p.approve("Isa", {"O-VAN|O-WSH#overlap": "ok"})
+        with self.assertRaises(ApprovalError): do_approve(p, "Isa", {"O-VAN|O-WSH#overlap": "ok"})
 
     def test_unchecked_needs_reasoned_waiver(self):
         from dataclasses import replace
         p = build_project()
         d = p.catalog.get("vanity"); p.catalog._defs["vanity"][0] = replace(d, required_spaces=())
         p.submit_for_review()
-        with self.assertRaises(ApprovalError): p.approve("Isa")
-        p.approve("Isa", {"O-VAN#service": "service space not defined; site check by Human"})
+        with self.assertRaises(ApprovalError): do_approve(p, "Isa")
+        do_approve(p, "Isa", {"O-VAN#service": "service space not defined; site check by Human"})
         self.assertIn("O-VAN#service", manifest(p)["waivers"])
 
     def test_change_after_approval_invalidates(self):
-        p = self.ready(); p.approve("Isa")
+        p = self.ready(); do_approve(p, "Isa")
         v = p.data_version
         p.set_measurement("O-VAN", "width", "751")
         self.assertEqual(p.data_version, v + 1)
@@ -195,8 +219,8 @@ class Approval(unittest.TestCase):
         self.assertTrue(manifest(p)["status_note"].startswith("UNAPPROVED"))
 
     def test_reapproval_after_change(self):
-        p = self.ready(); p.approve("Isa"); p.set_measurement("O-VAN", "width", "751")
-        p.submit_for_review(); p.approve("Isa")
+        p = self.ready(); do_approve(p, "Isa"); p.set_measurement("O-VAN", "width", "751")
+        p.submit_for_review(); do_approve(p, "Isa")
         self.assertEqual(len([a for a in p.approvals if a.valid]), 1)
 
 
@@ -204,23 +228,23 @@ class ApprovalBinding(unittest.TestCase):
     def test_stale_version_or_hash_refused(self):
         p = build_project(); p.submit_for_review()
         v, h = p.data_version, p.content_hash()
-        with self.assertRaises(ApprovalError): p.approve("Isa", expect_version=v - 1, expect_hash=h)
-        with self.assertRaises(ApprovalError): p.approve("Isa", expect_version=v, expect_hash="0" * 64)
-        a = p.approve("Isa", expect_version=v, expect_hash=h, kind="HUMAN_FINAL")
+        with self.assertRaises(ApprovalError): do_approve(p, "Isa", expect_version=v - 1, expect_hash=h)
+        with self.assertRaises(ApprovalError): do_approve(p, "Isa", expect_version=v, expect_hash="0" * 64)
+        a = do_approve(p, "Isa", expect_version=v, expect_hash=h, kind="HUMAN_FINAL")
         self.assertEqual(a.kind, "HUMAN_FINAL")
 
     def test_kind_distinguished_in_outputs(self):
-        p = build_project(); p.submit_for_review(); p.approve("dev")
+        p = build_project(); p.submit_for_review(); do_approve(p, "dev")
         self.assertIn("DEV SIMULATED", svg_plan(p)); self.assertIn("DEV SIMULATED", manifest(p)["status_note"])
-        p2 = build_project(); p2.submit_for_review(); p2.approve("Isa", kind="HUMAN_FINAL")
+        p2 = build_project(); p2.submit_for_review(); do_approve(p2, "Isa", kind="HUMAN_FINAL")
         self.assertNotIn("DEV SIMULATED", svg_plan(p2))
 
     def test_unknown_kind(self):
         p = build_project(); p.submit_for_review()
-        with self.assertRaises(ApprovalError): p.approve("Isa", kind="MAYBE")
+        with self.assertRaises(ApprovalError): do_approve(p, "Isa", kind="MAYBE")
 
     def test_persistence_roundtrip(self):
-        p = build_project(); p.submit_for_review(); p.approve("dev")
+        p = build_project(); p.submit_for_review(); do_approve(p, "dev")
         from hoa_field.project import Project
         q = Project.from_dict(json.loads(json.dumps(p.to_dict())), p.catalog)
         self.assertEqual(q.content_hash(), p.content_hash())
@@ -251,7 +275,7 @@ class Outputs(unittest.TestCase):
         self.assertFalse(manifest(p)["approved"])
 
     def test_approved_not_marked(self):
-        p = build_project(); p.submit_for_review(); p.approve("Isa")
+        p = build_project(); p.submit_for_review(); do_approve(p, "Isa")
         self.assertNotIn("UNAPPROVED", svg_plan(p)); self.assertTrue(manifest(p)["approved"])
 
     def test_unconfirmed_object_not_drawn(self):
@@ -259,7 +283,7 @@ class Outputs(unittest.TestCase):
         self.assertIn("O-VAN: not drawn", svg_plan(p))
 
     def test_export_failure_then_rerun_idempotent(self):
-        p = build_project(); p.submit_for_review(); p.approve("Isa")
+        p = build_project(); p.submit_for_review(); do_approve(p, "Isa")
         with tempfile.TemporaryDirectory() as t:
             blocked = Path(t) / "blocked"; blocked.write_text("i am a file, not a dir")
             with self.assertRaises((ExportError, OSError)): export_all(p, blocked / "sub")
@@ -291,7 +315,7 @@ class SceneTests(unittest.TestCase):
         self.assertIn("UNAPPROVED", s.preview_label)
 
     def test_derived_scene_does_not_mutate_source(self):
-        p = build_project(); p.submit_for_review(); p.approve("Isa")
+        p = build_project(); p.submit_for_review(); do_approve(p, "Isa")
         h = p.content_hash(); s = derive_scene(p, "S1")
         s.explode_object("O-WCB", "0", "0", "300"); s.section_plane = {"axis": "y", "at_mm": "275"}
         s.add_camera_key(0.0, [3000, 1500, 2000], [375, 275, 400])
@@ -301,9 +325,146 @@ class SceneTests(unittest.TestCase):
         self.assertFalse(s.verify_integrity())
 
     def test_source_change_leaves_scene_stale_detectable(self):
-        p = build_project(); p.submit_for_review(); p.approve("Isa"); s = derive_scene(p, "S1")
+        p = build_project(); p.submit_for_review(); do_approve(p, "Isa"); s = derive_scene(p, "S1")
         p.set_measurement("O-VAN", "width", "760")
         self.assertNotEqual(s.source_hash, p.content_hash())
+
+
+
+
+class ApprovalBindingRequired(unittest.TestCase):
+    """F-2: expect_version + expect_hash are mandatory (Fail Closed)."""
+
+    def ready(self):
+        p = build_project(); p.submit_for_review(); return p
+
+    def test_version_omitted_rejects(self):
+        p = self.ready()
+        with self.assertRaises(ApprovalError):
+            p.approve("Isa", expect_version=None, expect_hash=p.content_hash())
+
+    def test_hash_omitted_rejects(self):
+        p = self.ready()
+        with self.assertRaises(ApprovalError):
+            p.approve("Isa", expect_version=p.data_version, expect_hash=None)
+
+    def test_both_omitted_rejects(self):
+        p = self.ready()
+        with self.assertRaises(ApprovalError):
+            p.approve("Isa")  # both expect_version and expect_hash omitted
+    def test_wrong_version_rejects(self):
+        p = self.ready()
+        with self.assertRaises(ApprovalError):
+            do_approve(p, expect_version=p.data_version - 1)
+
+    def test_wrong_hash_rejects(self):
+        p = self.ready()
+        with self.assertRaises(ApprovalError):
+            do_approve(p, expect_hash="0" * 64)
+
+    def test_correct_version_hash_passes(self):
+        p = self.ready()
+        a = do_approve(p, kind="HUMAN_FINAL")
+        self.assertEqual(a.kind, "HUMAN_FINAL")
+        self.assertIsNotNone(p.current_approval())
+
+    def test_post_approval_snapshot_change_invalidates(self):
+        p = self.ready(); do_approve(p)
+        p.set_measurement("O-VAN", "width", "751")
+        self.assertIsNone(p.current_approval())
+        self.assertFalse(p.approvals[-1].valid)
+
+
+class EmptyProjectApproval(unittest.TestCase):
+    """F-3: empty / incomplete projects cannot be approved."""
+
+    def test_empty_project_rejects(self):
+        from hoa_field.project import Project
+        cat = build_catalog()
+        p = Project("P-EMPTY", cat, "2400 mm", "1800 mm", "2400 mm")
+        # empty has no validation ERRORs -> can enter review, but must not approve
+        p.submit_for_review()
+        with self.assertRaises(ApprovalError):
+            do_approve(p, "Isa")
+
+    def test_required_data_missing_rejects_review(self):
+        p = build_project(complete=False)
+        with self.assertRaises(ApprovalError):
+            p.submit_for_review()
+
+    def test_unchecked_without_waiver_rejects(self):
+        from dataclasses import replace
+        p = build_project()
+        d = p.catalog.get("vanity"); p.catalog._defs["vanity"][0] = replace(d, required_spaces=())
+        p.submit_for_review()
+        with self.assertRaises(ApprovalError):
+            do_approve(p, "Isa")
+        self.assertEqual(overall(check_all(p)), "INCOMPLETE")
+
+    def test_complete_valid_project_still_approves(self):
+        p = build_project(); p.submit_for_review(); do_approve(p, "Isa")
+        self.assertIs(p.status, Status.APPROVED)
+
+
+class CatalogKeyInjection(unittest.TestCase):
+    """F-1 / Fail Closed: malicious catalog keys rejected at Engine + Catalog."""
+
+    PAYLOADS = ["'", '"', "<", ">", "&", ");", "//",
+                "k',this);window.__pwn=1;//",
+                "x onerror=alert(1)",
+                "a);evil("]
+
+    def test_engine_measure_rejects_bad_keys(self):
+        from hoa_field.engine import call, EngineError
+        p = build_project()
+        st = {"catalog": p.catalog.to_dict(), "project": p.to_dict()}
+        for bad in self.PAYLOADS:
+            with self.assertRaises(EngineError, msg=bad):
+                call("measure", st, {"object_id": "O-VAN", "key": bad, "value": "1", "unit": "mm",
+                                     "source": "MEASURED", "by": "x"})
+
+    def test_engine_annotate_rejects_bad_keys(self):
+        from hoa_field.engine import call, EngineError
+        p = build_project()
+        st = {"catalog": p.catalog.to_dict(), "project": p.to_dict()}
+        for bad in self.PAYLOADS:
+            with self.assertRaises(EngineError, msg=bad):
+                call("annotate", st, {"object_id": "O-VAN", "key": bad, "text": "x"})
+
+    def test_publish_definition_rejects_bad_dimension_key(self):
+        from hoa_field.engine import call, EngineError
+        st = {"catalog": {}, "project": None}
+        payload = {
+            "definition_id": "box1", "name": "Box", "category": "t", "shape_template": "box",
+            "dimensions": [
+                {"key": "k',this);window.__pwn=1;//", "label": "w", "axis": "x", "required": True,
+                 "datum": "d", "method": "m", "tolerance_mm": "1", "min_mm": "10", "max_mm": "1000"},
+                {"key": "depth", "label": "d", "axis": "y", "required": True,
+                 "datum": "d", "method": "m", "tolerance_mm": "1", "min_mm": "10", "max_mm": "1000"},
+                {"key": "height", "label": "h", "axis": "z", "required": True,
+                 "datum": "d", "method": "m", "tolerance_mm": "1", "min_mm": "10", "max_mm": "1000"},
+            ],
+            "required_photos": [], "required_annotations": [], "required_spaces": [],
+        }
+        with self.assertRaises((EngineError, ValueError)):
+            out = call("publish_definition", st, payload)
+            if out.get("error"):
+                raise EngineError(out["error"])
+
+    def test_engine_approve_requires_version_hash(self):
+        from hoa_field.engine import call, EngineError
+        from hoa_field.engine import REQUIRED_CONFIRMATIONS
+        p = build_project(); p.submit_for_review()
+        st = {"catalog": p.catalog.to_dict(), "project": p.to_dict()}
+        base = {"approver": "Isa", "kind": "HUMAN_FINAL", "confirmations": list(REQUIRED_CONFIRMATIONS), "waivers": {}}
+        with self.assertRaises(EngineError):
+            call("approve", st, {**base})  # both omitted
+        with self.assertRaises(EngineError):
+            call("approve", st, {**base, "expect_hash": p.content_hash()})  # version omitted
+        with self.assertRaises(EngineError):
+            call("approve", st, {**base, "expect_version": p.data_version})  # hash omitted
+        out = call("approve", st, {**base, "expect_version": p.data_version, "expect_hash": p.content_hash()})
+        self.assertEqual(out["result"]["detail"]["status"], "APPROVED")
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ class Guards(unittest.TestCase):
     def export(self, approve):
         p = build_project()
         if approve:
-            p.submit_for_review(); p.approve("dev")
+            p.submit_for_review(); p.approve("dev", expect_version=p.data_version, expect_hash=p.content_hash())
         d = Path(tempfile.mkdtemp()); export_all(p, d); return d
 
     def test_approved_ok(self):

@@ -2,7 +2,7 @@
  "source_hash": "b4ded07a9e2bce6d8820dc47fd8fa37648a3a3a608c9eec2e9481029b9c52123",
  "data_version": 23,
  "approval_kind": "DEV_SIMULATED",
- "bpy": "5.0.1",
+ "bpy": "4.2.2 LTS",
  "objects": {
   "O-VAN": {
    "dimensions_mm": [

@@ -2,11 +2,20 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from decimal import Decimal
 from pathlib import Path
 
 AXES = ("x", "y", "z")
+# Shared allowlist with engine.need_id: Fail Closed for catalog/dimension/annotation/photo keys.
+ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
+
+
+def need_safe_id(v, what: str = "id") -> str:
+    if not isinstance(v, str) or not ID_RE.match(v):
+        raise ValueError(f"invalid {what}: use letters, digits, _ . - (max 64)")
+    return v
 
 
 @dataclass(frozen=True)
@@ -57,9 +66,16 @@ class ObjectDefinition:
         raise KeyError(key)
 
     def validate_definition(self) -> None:
+        need_safe_id(self.definition_id, "definition_id")
         keys = [d.key for d in self.dimensions]
         if len(set(keys)) != len(keys):
             raise ValueError("duplicate dimension keys")
+        for k in keys:
+            need_safe_id(k, "dimension key")
+        for a in self.required_annotations:
+            need_safe_id(a, "annotation key")
+        for ph in self.required_photos:
+            need_safe_id(ph, "photo tag")
         if self.shape_template == "box":
             axes = sorted(d.axis for d in self.dimensions if d.required)
             if axes != list(AXES):
@@ -110,6 +126,7 @@ class Catalog:
     def from_dict(cls, data: dict) -> "Catalog":
         c = cls()
         for k, vs in data.items():
+            need_safe_id(k, "definition_id")
             for v in vs:
                 dims = tuple(
                     DimensionSpec(**{**d, "tolerance_mm": Decimal(d["tolerance_mm"]),
@@ -117,10 +134,12 @@ class Catalog:
                     for d in v["dimensions"])
                 sps = tuple(ServiceSpace(**{**x, "depth_mm": Decimal(x["depth_mm"])})
                             for x in v.get("required_spaces", []))
-                c._defs.setdefault(k, []).append(ObjectDefinition(
+                od = ObjectDefinition(
                     **{**v, "dimensions": dims, "required_spaces": sps,
                        "required_photos": tuple(v["required_photos"]),
-                       "required_annotations": tuple(v["required_annotations"])}))
+                       "required_annotations": tuple(v["required_annotations"])})
+                od.validate_definition()  # Fail Closed on import/recovery/merge of unsafe keys
+                c._defs.setdefault(k, []).append(od)
         return c
 
     def save(self, path: Path) -> None:

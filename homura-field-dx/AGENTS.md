@@ -51,4 +51,8 @@ Goal: watch CI, review comments, merge conflicts and Head updates; act only when
 6. Head SHA changed => do not reuse earlier Evidence for the new Head. Check what changed, re-run the needed regression tests, re-bind Evidence to the new Head SHA.
 7. Forbidden: auto-merge; acting as Reviewer approval; production deploy; billing/contract operations; credential changes; SSOT/Canonical promotion; unneeded changes outside `homura-field-dx/`; treating 0 CI runs as PASS.
 8. Notify the Human only on: CI failure, review/comment added, conflict, Head SHA change, a design decision needed, security/credential/billing/production matters, merge-ready. No change => no notification.
-Report format (Signal / Decision / Reason / Evidence / Next Action / State) with 🟢 READY, 🟡 CAUTION, 🔴 BLOCKED, 🔵 INFO. Status log: `docs/pr_monitor_log.md`.
+9. Monitoring writes: do **not** create periodic monitoring commits. On no-change, do **not** write to the repository. Monitoring state/log lives **outside** the repository. `docs/pr_monitor_log.md` is an **historical initial record only** — do not treat it as the live status log, and do not create a commit solely to delete or refresh it.
+Report format (Signal / Decision / Reason / Evidence / Next Action / State) with 🟢 READY, 🟡 CAUTION, 🔴 BLOCKED, 🔵 INFO.
+
+## Approval authenticity (F-4 OPEN / Production Gate)
+`HUMAN_FINAL` currently records a typed approver name and version+hash binding. It does **not** guarantee authenticated approver identity, approval integrity, or signed / server-verifiable authenticity. Before Production / real customer data / external operation, design and implement: authenticated approver identity, approval integrity, signed or server-verifiable approval record, and manifest authenticity / anti-tamper. Do **not** treat F-4 as PASS.

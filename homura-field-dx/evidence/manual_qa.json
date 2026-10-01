@@ -69,7 +69,7 @@
   {
    "name": "fonts embedded (emb=yes for all)",
    "pass": true,
-   "detail": "yes yes     43  0\nAAAAAA+IPAGothic                     Type 3            Custom           yes yes yes     47  0\nAAAAAA+IPAGothic                     Type 3            Custom           yes yes yes     52  0\nAAAAAA+IPAGothic                     Type 3            Custom           yes yes yes     57  0\n"
+   "detail": "yes yes    157  0\nKAAAAA+HiraginoSans-W6               Type 3            Custom           yes yes yes    187  0\nKAAAAA+HiraginoSans-W6               Type 3            Custom           yes yes yes    188  0\nKAAAAA+HiraginoSans-W6               Type 3            Custom           yes yes yes    189  0\n"
   },
   {
    "name": "screenshots embedded (>= 17 images)",
@@ -79,7 +79,7 @@
   {
    "name": "screenshot effective resolution >= 100 ppi",
    "pass": true,
-   "detail": "(140, 192)"
+   "detail": "(140, 185)"
   },
   {
    "name": "no blank pages",

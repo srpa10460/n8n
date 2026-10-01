@@ -241,22 +241,34 @@ class Project:
     def approve(self, approver: str, waivers: dict[str, str] | None = None, kind: str = "DEV_SIMULATED",
                 expect_version: int | None = None, expect_hash: str | None = None,
                 confirmations: list[str] | None = None) -> Approval:
-        """Human Final Review gate for ONE data version. The caller states the version/hash the
-        reviewer actually saw; if the data moved since, approval is refused (no blind approval).
+        """Human Final Review gate for ONE data version. expect_version and expect_hash are REQUIRED
+        (Fail Closed if omitted or mismatched). The Engine/API enforces this; UI presence is not trust.
+        Empty projects (0 objects) cannot be approved. INCOMPLETE/UNCHECKED never promote to PASS;
         UNCHECKED items need a reasoned waiver; FAIL can never be waived.
-        kind HUMAN_FINAL must be requested by a Human via UI; DEV_SIMULATED is for development tests."""
+        NOTE (F-4 OPEN): HUMAN_FINAL does NOT currently guarantee authenticated approver identity,
+        approval integrity, or signed/server-verifiable authenticity. Those are a Production Gate."""
         if kind not in self.KINDS:
             raise ApprovalError("unknown approval kind")
         if self.status is not Status.IN_REVIEW:
             raise ApprovalError("must be IN_REVIEW")
         if not approver.strip():
             raise ApprovalError("approver required")
-        if expect_version is not None and expect_version != self.data_version:
+        if expect_version is None:
+            raise ApprovalError("expect_version required (version-bound approval)")
+        if expect_hash is None or not str(expect_hash).strip():
+            raise ApprovalError("expect_hash required (hash-bound approval)")
+        if int(expect_version) != self.data_version:
             raise ApprovalError(f"stale review: reviewed v{expect_version}, current v{self.data_version}")
-        if expect_hash is not None and expect_hash != self.content_hash():
+        if str(expect_hash) != self.content_hash():
             raise ApprovalError("stale review: content hash differs from the reviewed one")
+        if len(self.instances) == 0:
+            raise ApprovalError("empty project cannot be approved (no objects)")
         waivers = waivers or {}
         items = self.review_items()
+        # overall INCOMPLETE is never an auto-PASS; empty already rejected above.
+        # UNCHECKED stays UNCHECKED unless each item has an explicit reasoned waiver.
+        if items["overall"] == "INCOMPLETE" and not items["unchecked"] and not items["fail"]:
+            raise ApprovalError("incomplete project cannot be approved (no checkable interference results)")
         if items["validation_errors"]:
             raise ApprovalError("validation errors present")
         if items["fail"]:

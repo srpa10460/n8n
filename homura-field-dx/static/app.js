@@ -6,6 +6,11 @@ const SECTIONS=[["sync","0 同期・端末データ"],["project","1 案件"],["c
 let S={units:["mm","cm","m","in","ft"],projects:[],catalog:{},catalogDict:{},projDicts:{},syncRecs:{},cur:null,detail:null,tab:"project",msg:null,err:null,exported:null,online:false,devAuth:false,saveInfo:null,photoURLs:{},ready:{sw:false,py:false,persist:null,usage:null,quota:null},busy:{},clientId:""};
 const $=s=>document.querySelector(s);
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+// F-1: allowlist IDs. HTML escape is NOT a JS security boundary. Never concat untrusted keys into code.
+const ID_RE=/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
+function needId(v,what="id"){if(typeof v!=="string"||!ID_RE.test(v))throw new Error("invalid "+what+": rejected (Fail Closed)");return v}
+function isSafeId(v){return typeof v==="string"&&ID_RE.test(v)}
+function attrId(v,what="id"){return isSafeId(v)?esc(v):""}
 const badge=(t,cls)=>`<span class="badge b-${cls}">${esc(t)}</span>`;
 const dimBadge=s=>({MEASURED:badge("実測","ok"),ESTIMATED:badge("写真推定(未確認)","warn"),MISSING:badge("未入力(未確認)","gray"),INVALID:badge("無効","ng")}[s]);
 const stBadge=s=>({PASS:badge("PASS","ok"),FAIL:badge("FAIL","ng"),UNCHECKED:badge("UNCHECKED 未確認","warn"),INFO:badge("INFO 参考値","gray")}[s]||esc(s));
@@ -35,7 +40,7 @@ function header(){
   const ap=a?badge(a.kind==="DEV_SIMULATED"?"承認済(開発模擬・実案件承認ではない)":"承認済(Human最終)",a.kind==="DEV_SIMULATED"?"warn":"ok"):badge("未承認","gray");
   return netb+` 案件 <b id="h-pid">${esc(d.project_id)}</b> ${badge(d.status,"gray")} データ版 <b id="h-ver">v${d.data_version}</b> <span class="mono" title="${esc(d.content_hash)}">hash ${esc(d.content_hash.slice(0,12))}</span> ${ap} ${badge("写真→自動作図: 未実装","warn")} ${saveBadge()} ${syncBadges(d.project_id)}`;
 }
-function renderNav(){$("#nav").innerHTML=SECTIONS.map(([k,l])=>`<button data-tab="${k}" class="${S.tab===k?"on":""}" onclick="go('${k}')">${l}</button>`).join("")}
+function renderNav(){$("#nav").innerHTML=SECTIONS.map(([k,l])=>`<button type="button" data-act="tab" data-tab="${k}" class="${S.tab===k?"on":""}">${l}</button>`).join("")}
 
 function msgs(){return (S.msg?`<div class="notice" style="border-color:var(--ok);background:var(--okbg);color:var(--ok)" id="msg">${esc(S.msg)}</div>`:"")+(S.err?`<div class="err" id="err">${esc(S.err)}</div>`:"")}
 function needProject(){return S.detail?"":'<div class="notice">先に「1 案件」で案件を作成/選択してください。</div>'}
@@ -47,12 +52,12 @@ V.project=()=>`
  <label>案件ID<input id="np-id" placeholder="P-0001"></label>
  <label>幅<input id="np-w" size="6" value="2400"></label><label>奥行<input id="np-d" size="6" value="1800"></label><label>高さ<input id="np-h" size="6" value="2400"></label>
  <label>単位<select id="np-u">${unitOpts("mm")}</select></label>
- <button class="btn" id="np-go" onclick="createProject()">案件を作成</button></div>
+ <button class="btn" id="np-go" type="button" data-act="create-project">案件を作成</button></div>
  <div class="sub">部屋の内寸(壁面間・床〜天井)。内部は mm (0.001mm単位)で保持します。</div></section>
 <section class="card"><h2>案件一覧</h2>
  <table><tr><th>案件ID</th><th>状態</th><th>データ版</th><th>対象物数</th><th></th></tr>
- ${S.projects.map(p=>`<tr><td>${esc(p.project_id)}</td><td>${esc(p.status)}</td><td>v${p.data_version}</td><td>${p.objects}</td><td><button class="btn sec" data-open="${esc(p.project_id)}" onclick="selectProject('${esc(p.project_id)}')">開く</button></td></tr>`).join("")||'<tr><td colspan="5" class="sub">案件なし</td></tr>'}</table></section>`;
-function createProject(){act(async()=>{const j=await api("/api/projects",{project_id:$("#np-id").value.trim(),w:$("#np-w").value,d:$("#np-d").value,h:$("#np-h").value,unit:$("#np-u").value});S.cur=j.project_id;return j},"案件を作成しました")}
+ ${S.projects.map(p=>`<tr><td>${esc(p.project_id)}</td><td>${esc(p.status)}</td><td>v${p.data_version}</td><td>${p.objects}</td><td>${isSafeId(p.project_id)?`<button class="btn sec" type="button" data-act="open-project" data-open="${attrId(p.project_id)}">開く</button>`:badge("不正ID拒否","ng")}</td></tr>`).join("")||'<tr><td colspan="5" class="sub">案件なし</td></tr>'}</table></section>`;
+function createProject(){try{needId($("#np-id").value.trim(),"project_id")}catch(e){S.err=e.message;S.msg=null;return render()}act(async()=>{const j=await api("/api/projects",{project_id:$("#np-id").value.trim(),w:$("#np-w").value,d:$("#np-d").value,h:$("#np-h").value,unit:$("#np-u").value});S.cur=j.project_id;return j},"案件を作成しました")}
 
 V.catalog=()=>{
  const rows=Object.entries(S.catalog).map(([id,vs])=>{const l=vs[vs.length-1];return `<tr><td>${esc(id)}</td><td>${esc(l.name)}</td><td>${esc(l.category)}</td><td>v${l.version}${vs.length>1?` <span class="sub">(全${vs.length}版)</span>`:""}</td>
@@ -60,7 +65,7 @@ V.catalog=()=>{
   <td class="sub">${l.required_spaces.map(s=>esc(s.kind)+":"+esc(s.side)+" "+esc(s.depth_mm)+"mm").join("; ")||"未定義"}${l.has_opening?" / 開閉あり":""}</td></tr>`}).join("");
  return `<section class="card"><h2>登録済みCatalog</h2>
  <table id="cat-table"><tr><th>ID</th><th>名称</th><th>カテゴリ</th><th>最新版</th><th>寸法項目 (*必須 / 軸)</th><th>必要な作業・保守空間</th></tr>${rows||'<tr><td colspan="6" class="sub">未登録</td></tr>'}</table>
- <p><button class="btn sec" id="cat-sample" onclick="act(()=>api('/api/catalog/sample',{}),'合成サンプルを読み込みました')">合成サンプルCatalogを読み込む (開発用・実仕様ではない)</button></p></section>
+ <p><button class="btn sec" id="cat-sample" type="button" data-act="catalog-sample">合成サンプルCatalogを読み込む (開発用・実仕様ではない)</button></p></section>
 <section class="card"><h2>対象物の追加 / 新しい版の登録</h2>
  <div class="notice">同じIDで登録すると新しい版になります。既存の対象物は登録時の版に固定され、意味は変わりません。</div>
  <div class="row"><label>ID<input id="c-id" placeholder="vanity"></label><label>名称<input id="c-name"></label><label>カテゴリ<input id="c-cat"></label>
@@ -80,10 +85,11 @@ V.catalog=()=>{
  <div class="row"><label>種別<select id="s-kind"><option value="service">作業・保守</option><option value="opening">開閉範囲</option></select></label>
  <label>面<select id="s-side"><option value="front">前面</option><option value="back">背面</option><option value="left">左</option><option value="right">右</option><option value="top">上</option></select></label>
  <label>奥行(mm)<input id="s-depth" size="6"></label><label>根拠(必須)<input id="s-basis" size="34" placeholder="例: 機器メーカー仕様書 p.12"></label></div>
- <button class="btn" id="c-go" onclick="addCatalog()">Catalogに登録</button></section>`}
+ <button class="btn" id="c-go" type="button" data-act="add-catalog">Catalogに登録</button></section>`}
 function addCatalog(){
  const dims=[...document.querySelectorAll("tr.cd")].map(tr=>{const o={};tr.querySelectorAll("[data-f]").forEach(e=>o[e.dataset.f]=e.value);o.required=o.required==="1";return o});
  const csv=v=>v.split(",").map(x=>x.trim()).filter(Boolean);
+ try{needId($("#c-id").value.trim(),"definition_id");dims.forEach(d=>needId(d.key,"dimension key"));csv($("#c-photos").value).forEach(t=>needId(t,"photo tag"));csv($("#c-ann").value).forEach(a=>needId(a,"annotation key"))}catch(e){S.err=e.message;S.msg=null;return render()}
  const spaces=$("#s-depth").value.trim()?[{kind:$("#s-kind").value,side:$("#s-side").value,depth_mm:$("#s-depth").value,basis:$("#s-basis").value}]:[];
  act(()=>api("/api/catalog",{definition_id:$("#c-id").value.trim(),name:$("#c-name").value.trim(),category:$("#c-cat").value.trim(),shape_template:$("#c-shape").value,has_opening:$("#c-open").value==="1",dimensions:dims,required_photos:csv($("#c-photos").value),required_annotations:csv($("#c-ann").value),required_spaces:spaces}),"Catalogに登録しました");
 }
@@ -92,15 +98,15 @@ V.objects=()=>{
  if(!S.detail)return needProject();const d=S.detail;const defs=Object.keys(S.catalog);
  return `<section class="card"><h2>対象物を追加</h2>
  <div class="row"><label>対象物ID<input id="o-id" placeholder="O-VAN"></label><label>Catalog定義<select id="o-def">${defs.map(x=>`<option>${esc(x)}</option>`).join("")}</select></label><label>表示名<input id="o-label"></label>
- <button class="btn" id="o-go" onclick="addObject()">追加 (最新版に固定)</button></div></section>
+ <button class="btn" id="o-go" type="button" data-act="add-object">追加 (最新版に固定)</button></div></section>
  <section class="card"><h2>配置</h2>
  <div class="sub">配置は対象物の最小隅(左・手前)の座標。前面は、回転0で +y 方向を向きます。回転は平面で反時計回り。部屋の内寸 ${esc(d.room.w)} x ${esc(d.room.d)} x ${esc(d.room.h)} mm。</div>
  <table><tr><th>ID</th><th>名称/定義版</th><th>配置 x,y,z (mm)</th><th>回転</th><th>配置入力</th></tr>
  ${d.instances.map(i=>`<tr data-obj="${esc(i.object_id)}"><td>${esc(i.object_id)}</td><td>${esc(i.label)}<div class="sub">${esc(i.definition.id)}@v${i.definition.version}${i.definition.latest_version>i.definition.version?` ${badge("新版v"+i.definition.latest_version+"あり(この対象物はv"+i.definition.version+"のまま)","warn")}`:""}</div></td>
  <td>${i.placement?`${esc(i.placement.x)}, ${esc(i.placement.y)}, ${esc(i.placement.z)}`:badge("未配置","gray")}</td><td>${i.placement?i.placement.rot+"°":""}</td>
- <td><input size="5" data-p="x" placeholder="x"> <input size="5" data-p="y" placeholder="y"> <input size="5" data-p="z" placeholder="z" value="0"> <select data-p="unit">${unitOpts("mm")}</select> <select data-p="rot"><option>0</option><option>90</option><option>180</option><option>270</option></select> <button class="btn sec" onclick="place('${esc(i.object_id)}',this)">配置</button></td></tr>`).join("")||'<tr><td colspan="5" class="sub">対象物なし</td></tr>'}</table></section>`};
-function addObject(){act(()=>api(`/api/projects/${S.cur}/instance`,{object_id:$("#o-id").value.trim(),definition_id:$("#o-def").value,label:$("#o-label").value.trim()}),"対象物を追加しました")}
-function place(id,btn){const tr=btn.closest("tr");const g=k=>tr.querySelector(`[data-p=${k}]`).value;act(()=>api(`/api/projects/${S.cur}/place`,{object_id:id,x:g("x"),y:g("y"),z:g("z"),unit:g("unit"),rotation:g("rot")}),"配置しました")}
+ <td><input size="5" data-p="x" placeholder="x"> <input size="5" data-p="y" placeholder="y"> <input size="5" data-p="z" placeholder="z" value="0"> <select data-p="unit">${unitOpts("mm")}</select> <select data-p="rot"><option>0</option><option>90</option><option>180</option><option>270</option></select> ${isSafeId(i.object_id)?`<button class="btn sec" type="button" data-act="place" data-obj="${attrId(i.object_id)}">配置</button>`:badge("不正ID拒否","ng")}</td></tr>`).join("")||'<tr><td colspan="5" class="sub">対象物なし</td></tr>'}</table></section>`};
+function addObject(){try{needId($("#o-id").value.trim(),"object_id");needId($("#o-def").value,"definition_id")}catch(e){S.err=e.message;S.msg=null;return render()}act(()=>api(`/api/projects/${S.cur}/instance`,{object_id:$("#o-id").value.trim(),definition_id:$("#o-def").value,label:$("#o-label").value.trim()}),"対象物を追加しました")}
+function place(id,btn){id=needId(id,"object_id");const tr=btn.closest("tr");const g=k=>tr.querySelector(`[data-p=${k}]`).value;act(()=>api(`/api/projects/${S.cur}/place`,{object_id:id,x:g("x"),y:g("y"),z:g("z"),unit:g("unit"),rotation:g("rot")}),"配置しました")}
 
 V.dims=()=>{
  if(!S.detail)return needProject();
@@ -110,8 +116,8 @@ V.dims=()=>{
  ${i.dims.map(x=>`<tr data-key="${esc(x.key)}"><td>${esc(x.label)}${x.required?" *":""}<div class="sub">${esc(x.key)}</div></td><td>${esc(x.axis)}</td>
  <td class="sub">${esc(x.datum)} / ${esc(x.method)} / ±${esc(x.tolerance_mm)}mm / ${esc(x.min_mm)}〜${esc(x.max_mm)}mm<br>出典: ${esc(x.source)}</td>
  <td>${x.mm?`${esc(x.mm)} mm<div class="sub">入力: ${esc(x.input)}</div>`:"—"}${x.why?`<div class="sub">${esc(x.why)}</div>`:""}</td><td>${dimBadge(x.state)}</td>
- <td><input size="7" data-m="v" placeholder="値"> <select data-m="u">${unitOpts("mm")}</select> <select data-m="s"><option value="MEASURED">実測</option><option value="ESTIMATED_PHOTO">写真推定</option></select> <input size="8" data-m="by" placeholder="測定者"> <button class="btn sec" onclick="measure('${esc(i.object_id)}','${esc(x.key)}',this)">入力</button></td></tr>`).join("")}</table></section>`).join("")||'<div class="sub">対象物なし</div>'};
-function measure(o,k,btn){const tr=btn.closest("tr");const g=c=>tr.querySelector(`[data-m=${c}]`).value;act(()=>api(`/api/projects/${S.cur}/measure`,{object_id:o,key:k,value:g("v"),unit:g("u"),source:g("s"),by:g("by")}),"寸法を記録しました")}
+ <td><input size="7" data-m="v" placeholder="値"> <select data-m="u">${unitOpts("mm")}</select> <select data-m="s"><option value="MEASURED">実測</option><option value="ESTIMATED_PHOTO">写真推定</option></select> <input size="8" data-m="by" placeholder="測定者"> ${(isSafeId(i.object_id)&&isSafeId(x.key))?`<button class="btn sec" type="button" data-act="measure" data-obj="${attrId(i.object_id)}" data-key="${attrId(x.key)}">入力</button>`:badge("不正キー拒否","ng")}</td></tr>`).join("")}</table></section>`).join("")||'<div class="sub">対象物なし</div>'};
+function measure(o,k,btn){o=needId(o,"object_id");k=needId(k,"dimension key");const tr=btn.closest("tr");const g=c=>tr.querySelector(`[data-m=${c}]`).value;act(()=>api(`/api/projects/${S.cur}/measure`,{object_id:o,key:k,value:g("v"),unit:g("u"),source:g("s"),by:g("by")}),"寸法を記録しました")}
 
 V.photos=()=>{
  if(!S.detail)return needProject();
@@ -121,15 +127,16 @@ V.photos=()=>{
  <div>必須写真: ${i.definition.required_photos.map(t=>have.has(t)?badge(t+" 済","ok"):badge(t+" 未","ng")).join(" ")||'<span class="sub">なし</span>'}</div>
  <div class="thumbs">${i.photos.map(p=>`<span><img src="${esc(S.photoURLs[S.cur+"/"+p.asset_id]||"")}" alt="${esc(p.tag)}" title="${esc(p.filename)} sha256:${esc((p.sha256||"").slice(0,12))}"></span>`).join("")}</div>
  <div class="row" style="margin-top:8px"><label>写真タグ<select data-ph="tag">${tags.map(t=>`<option>${esc(t)}</option>`).join("")}</select></label><label>ファイル(png/jpg/webp, 8MBまで)<input type="file" data-ph="file" accept="image/png,image/jpeg,image/webp"></label>
- <button class="btn sec" onclick="upload('${esc(i.object_id)}',this)">添付</button></div>
+ ${isSafeId(i.object_id)?`<button class="btn sec" type="button" data-act="upload" data-obj="${attrId(i.object_id)}">添付</button>`:badge("不正ID拒否","ng")}</div>
  <h3>注記</h3>
- ${i.definition.required_annotations.map(k=>`<div class="row"><label style="min-width:160px">${esc(k)} (必須) ${i.annotations[k]?badge("入力済","ok"):badge("未入力","ng")}<input size="46" data-an="${esc(k)}" value="${esc(i.annotations[k]||"")}"></label><button class="btn sec" onclick="annot('${esc(i.object_id)}','${esc(k)}',this)">保存</button></div>`).join("")||'<div class="sub">必須注記なし</div>'}
+ ${i.definition.required_annotations.map(k=>{const ok=isSafeId(i.object_id)&&isSafeId(k);return `<div class="row"><label style="min-width:160px">${esc(k)} (必須) ${i.annotations[k]?badge("入力済","ok"):badge("未入力","ng")}<input size="46" data-an="${ok?attrId(k):""}" value="${esc(i.annotations[k]||"")}" ${ok?"":"disabled"}></label>${ok?`<button class="btn sec" type="button" data-act="annot" data-obj="${attrId(i.object_id)}" data-key="${attrId(k)}">保存</button>`:badge("不正キー拒否","ng")}</div>`}).join("")||'<div class="sub">必須注記なし</div>'}
  </section>`}).join("")};
-function upload(o,btn){const c=btn.closest("section");const f=c.querySelector("[data-ph=file]").files[0];const tag=c.querySelector("[data-ph=tag]").value;
+function upload(o,btn){o=needId(o,"object_id");const c=btn.closest("section");const f=c.querySelector("[data-ph=file]").files[0];const tag=c.querySelector("[data-ph=tag]").value;
  if(!f){S.err="ファイルを選択してください";return render()}
+ needId(tag,"photo tag");
  S.msg=S.err=null;document.querySelectorAll("#msg,#err").forEach(e=>e.remove());   // file reading is async: clear the old result first
  const fr=new FileReader();fr.onload=()=>act(()=>api(`/api/projects/${S.cur}/photo`,{object_id:o,tag,filename:f.name,data_base64:fr.result.split(",")[1],_blob:f}),"写真を添付しました");fr.readAsDataURL(f)}
-function annot(o,k,btn){const v=btn.closest(".row").querySelector("input").value;act(()=>api(`/api/projects/${S.cur}/annotate`,{object_id:o,key:k,text:v}),"注記を保存しました")}
+function annot(o,k,btn){o=needId(o,"object_id");k=needId(k,"annotation key");const v=btn.closest(".row").querySelector("input").value;act(()=>api(`/api/projects/${S.cur}/annotate`,{object_id:o,key:k,text:v}),"注記を保存しました")}
 
 function checkTable(rs){return `<table><tr><th>対象</th><th>種別</th><th>判定</th><th>内容</th></tr>${rs.map(r=>`<tr><td class="mono">${esc(r.id)}</td><td>${esc(r.kind)}</td><td>${stBadge(r.status)}</td><td>${esc(r.reason)}</td></tr>`).join("")}</table>`}
 V.check=()=>{
@@ -153,15 +160,15 @@ V.review=()=>{
  <table><tr><th>案件</th><td>${esc(d.project_id)}</td></tr><tr><th>状態</th><td>${esc(d.status)}</td></tr><tr><th>データ版</th><td id="rv-ver">v${d.data_version}</td></tr><tr><th>内容hash</th><td class="mono" id="rv-hash">${esc(d.content_hash)}</td></tr>
  <tr><th>入力検証エラー</th><td>${r.validation_errors}</td></tr><tr><th>干渉 FAIL</th><td>${r.fail.length?esc(r.fail.join(", ")):"なし"}</td></tr><tr><th>未確認(UNCHECKED)</th><td>${r.unchecked.length}件</td></tr><tr><th>写真推定の値</th><td>${r.estimated.length?esc(r.estimated.map(e=>e.join(".")).join(", ")):"なし"}</td></tr></table>
  ${a?`<div class="notice" style="border-color:var(--ok)">現在の版に有効な承認があります: ${a.kind==="DEV_SIMULATED"?"<b>開発模擬承認 (実案件の承認ではありません)</b>":"Human最終承認"} / ${esc(a.approver)} / v${a.version}</div>`:""}
- ${d.status==="DRAFT"?`<button class="btn" id="rv-submit" onclick="act(()=>api('/api/projects/${S.cur}/submit_review',{}),'レビューに提出しました')">この版をレビューに提出</button> <span class="sub">入力検証エラーがあると提出できません。</span>`:""}</section>
+ ${d.status==="DRAFT"?`<button class="btn" id="rv-submit" type="button" data-act="submit-review">この版をレビューに提出</button> <span class="sub">入力検証エラーがあると提出できません。</span>`:""}</section>
  ${d.status==="IN_REVIEW"?`<section class="card"><h2>承認 (この版のみ)</h2>
  ${blocked?`<div class="err">入力検証エラーまたは干渉FAILがあるため承認できません (免除不可)。</div>`:""}
  ${r.unchecked.length?`<h3>未確認項目 (承認するには各項目に理由が必要)</h3>${r.unchecked.map(u=>`<div class="row"><label style="min-width:280px"><span class="mono">${esc(u)}</span><input size="46" data-wv="${esc(u)}" placeholder="例: 現場で目視確認した 等"></label></div>`).join("")}`:""}
  <h3>確認事項</h3>${r.required_confirmations.map(c=>`<div><label style="flex-direction:row;align-items:center;gap:6px;color:var(--text);font-size:14px"><input type="checkbox" data-cf="${c}"> ${esc(labels[c])}</label></div>`).join("")}
  <div class="row" style="margin-top:8px"><label>承認者名<input id="ap-name" size="22"></label>
  <label>承認の種類<select id="ap-kind"><option value="DEV_SIMULATED">開発模擬承認 (テスト用・実案件の承認ではない)</option><option value="HUMAN_FINAL">Human最終承認 (実案件。責任者本人のみ)</option></select></label>
- <button class="btn" id="ap-go" onclick="approve()" ${blocked?"disabled":""}>v${d.data_version} を承認</button></div>
- <div class="sub">承認は表示中のデータ版・hashに紐づき、承認後にデータを変更すると承認は失効します。</div></section>`:""}
+ <button class="btn" id="ap-go" type="button" data-act="approve" ${blocked?"disabled":""}>v${d.data_version} を承認</button></div>
+ <div class="sub">承認は表示中のデータ版・hashに必須紐づけ(省略不可)。承認後にデータを変更すると承認は失効します。HUMAN_FINALは現段階では認証済み本人性を保証しません(F-4 OPEN / Production Gate)。</div></section>`:""}
  <section class="card"><h2>承認履歴</h2><table><tr><th>版</th><th>種類</th><th>承認者</th><th>日時</th><th>有効</th></tr>${d.approvals.map(x=>`<tr><td>v${x.approved_version}</td><td>${x.kind==="DEV_SIMULATED"?badge("開発模擬","warn"):badge("Human最終","ok")}</td><td>${esc(x.approver)}</td><td class="mono">${esc(x.at)}</td><td>${x.valid?badge("有効","ok"):badge("失効","ng")} <span class="sub">${esc(x.invalidated_reason)}</span></td></tr>`).join("")||'<tr><td colspan="5" class="sub">なし</td></tr>'}</table></section>
  <section class="card"><h2>変更履歴 (直近)</h2><div class="mono">${d.history.map(esc).join("<br>")}</div></section>`};
 function approve(){
@@ -174,7 +181,7 @@ V.export=()=>{
  if(!S.detail)return needProject();const d=S.detail;
  return `<section class="card"><h2>出力 (v${d.data_version})</h2>
  ${d.approval_current?`<div class="sub">この版は承認済みです${d.approval_current.kind==="DEV_SIMULATED"?" (開発模擬承認)":""}。</div>`:`<div class="notice">この版は未承認です。出力には「UNAPPROVED PREVIEW」が入ります。</div>`}
- <button class="btn" id="ex-go" onclick="act(()=>api('/api/projects/${S.cur}/export',{}),'出力しました')">平面図 SVG / 3D OBJ / manifest / snapshot を出力</button>
+ <button class="btn" id="ex-go" type="button" data-act="export">平面図 SVG / 3D OBJ / manifest / snapshot を出力</button>
  ${S.exported?`<h3>生成物</h3><ul id="ex-list">${S.exported.map(f=>`<li><a href="${esc(f.url)}" download="${esc(f.name)}">${esc(f.name)}</a> <span class="sub">${f.bytes} bytes</span></li>`).join("")}</ul>`:""}
  <div class="sub">生成は端末内で完了します(通信不要)。再実行しても同じ内容になります。</div></section>`};
 
@@ -260,25 +267,25 @@ V.sync=()=>{
  <table id="prep-table"><tr><th>アプリ本体のオフライン保存 (Service Worker)</th><td>${e.sw?badge("準備済み","ok"):badge("未準備 — 初回はオンラインで一度開く必要があります","warn")}</td></tr>
  <tr><th>Python実行環境 (検証ロジック本体)</th><td>${e.py?badge("読込済み","ok"):badge("未読込","warn")}</td></tr>
  <tr><th>対象物Catalog (端末保存)</th><td>${Object.keys(S.catalogDict).length}定義 ${Object.keys(S.catalogDict).length?badge("端末に保存済み","ok"):badge("未保存 — 現場へ出る前にCatalogを登録/取得してください","warn")}</td></tr>
- <tr><th>永続ストレージ</th><td>${e.persist===true?badge("許可済み","ok"):e.persist===false?badge("未許可(端末が自動削除する可能性あり)","warn"):"不明"} <button class="btn sec" onclick="requestPersist()">永続保存を要求</button></td></tr>
+ <tr><th>永続ストレージ</th><td>${e.persist===true?badge("許可済み","ok"):e.persist===false?badge("未許可(端末が自動削除する可能性あり)","warn"):"不明"} <button class="btn sec" type="button" data-act="request-persist">永続保存を要求</button></td></tr>
  <tr><th>端末の使用量 / 上限(見積)</th><td id="usage">${fmtMB(e.usage)} / ${fmtMB(e.quota)}</td></tr>
  <tr><th>サーバー接続</th><td>${S.online?badge("接続可","ok"):badge("接続不可 — 送信・Catalog取得は「接続後に処理」","warn")} ${S.devAuth?"":'<span class="sub">(サーバー認証未設定)</span>'}</td></tr></table>
  <div class="notice">前提条件: 初回の準備(アプリ本体・Python実行環境 約14MB・Catalogの保存)にはオンライン接続が必要です。以後はオフラインで 案件/Catalog/対象物/採寸/単位/測定基準/写真/注記 を扱えます。写真は端末(IndexedDB)に保存され、アプリ終了・再起動後も復元されます。端末内の未送信データは自動削除しません。対象端末(機種/OS/ブラウザ)は未確定のため、端末での永続保存・容量はまだ検証していません。</div>
- <div class="row"><button class="btn sec" id="login" onclick="devLogin()" ${S.online&&S.devAuth?"":"disabled"}>開発用ログイン (接続後に処理)</button>
- <button class="btn sec" id="fetch-cat" onclick="fetchCatalog()" ${S.online?"":"disabled"}>サーバーからCatalog取得 (接続後に処理)</button></div></section>
+ <div class="row"><button class="btn sec" id="login" type="button" data-act="dev-login" ${S.online&&S.devAuth?"":"disabled"}>開発用ログイン (接続後に処理)</button>
+ <button class="btn sec" id="fetch-cat" type="button" data-act="fetch-catalog" ${S.online?"":"disabled"}>サーバーからCatalog取得 (接続後に処理)</button></div></section>
  <section class="card"><h2>案件の送信状況</h2><table id="sync-table"><tr><th>案件</th><th>状態</th><th>詳細 / 失敗理由</th><th>操作</th></tr>
  ${Object.keys(S.projDicts).map(pid=>{const r=S.syncRecs[pid]||{};const s=syncState(pid);const busy=!!S.busy[pid];
   return `<tr data-pid="${esc(pid)}"><td>${esc(pid)}</td><td>${syncBadges(pid)}</td>
   <td class="sub">${r.error?`<span style="color:var(--ng)">${esc(r.error)}</span><br>`:""}${r.attempts?"試行 "+r.attempts+"回":""}${s.tx==="RECEIVED"?` / 添付 ${r.received_assets}件をサーバーで照合済み`:""}
   ${r.conflict?`<br>競合: サーバー rev${esc(r.conflict.server_rev)} (別端末 ${esc(r.conflict.server_client_id)} v${esc(r.conflict.server_data_version)}) との差分 ${r.conflict.diff.length}件`:""}</td>
-  <td><button class="btn" data-send="${esc(pid)}" onclick="doSend('${esc(pid)}')" ${(!S.online||busy||s.tx==="RECEIVED"||s.tx==="CONFLICT")?"disabled":""}>${s.tx==="FAILED"?"再試行":"送信"}</button>${!S.online?' <span class="sub">接続後に処理</span>':""}
-  ${s.tx==="CONFLICT"?`<button class="btn sec" onclick="showDiff('${esc(pid)}')">差分を表示</button>`:""}</td></tr>`}).join("")||'<tr><td colspan="4" class="sub">案件なし</td></tr>'}</table>
+  <td>${isSafeId(pid)?`<button class="btn" type="button" data-act="send" data-send="${attrId(pid)}" ${(!S.online||busy||s.tx==="RECEIVED"||s.tx==="CONFLICT")?"disabled":""}>${s.tx==="FAILED"?"再試行":"送信"}</button>`:badge("不正ID拒否","ng")}${!S.online?' <span class="sub">接続後に処理</span>':""}
+  ${s.tx==="CONFLICT"&&isSafeId(pid)?`<button class="btn sec" type="button" data-act="show-diff" data-pid="${attrId(pid)}">差分を表示</button>`:""}</td></tr>`}).join("")||'<tr><td colspan="4" class="sub">案件なし</td></tr>'}</table>
  <div id="diff-area"></div>
  <div class="sub">送信は手動です。送信中に入力を変更しても、送信対象の版(v)と新しい未送信版を区別して表示します。サーバーが受領した内容(ハッシュ・添付数)を照合できるまで「サーバー受領済み」にはなりません。</div></section>
  <section class="card"><h2>復旧用エクスポート / インポート</h2>
  <div class="sub">端末内の全案件・写真・Catalog・送信状況を1ファイルに書き出します(写真のSHA-256付き)。端末故障や容量不足に備え、定期的に保存してください。インポートは既存の案件を上書きしません。</div>
- <div class="row" style="margin-top:8px"><button class="btn" id="bk-export" onclick="exportBackup()">復旧用ファイルを書き出す</button>
- <label>復旧用ファイルを読み込む<input type="file" id="bk-file" accept="application/json"></label><button class="btn sec" id="bk-import" onclick="importBackup()">読み込む</button></div>
+ <div class="row" style="margin-top:8px"><button class="btn" id="bk-export" type="button" data-act="backup-export">復旧用ファイルを書き出す</button>
+ <label>復旧用ファイルを読み込む<input type="file" id="bk-file" accept="application/json"></label><button class="btn sec" id="bk-import" type="button" data-act="backup-import">読み込む</button></div>
  <div id="bk-report" class="sub"></div></section>`};
 async function doSend(pid){
   S.busy[pid]=true;S.err=S.msg=null;render();
@@ -291,8 +298,8 @@ function showDiff(pid){
   $("#diff-area").innerHTML=`<h3>競合の差分 (ローカル ↔ サーバー rev${esc(c.server_rev)})</h3>
   <table id="diff-table"><tr><th>項目</th><th>この端末</th><th>サーバー</th></tr>${c.diff.map(d=>`<tr><td class="mono">${esc(d.path)}</td><td>${esc(JSON.stringify(d.local))}</td><td>${esc(JSON.stringify(d.server))}</td></tr>`).join("")||'<tr><td colspan="3" class="sub">差分なし(版情報のみ相違)</td></tr>'}</table>
   <div class="notice">自動で上書きしません。どちらかを選んでください。<br>・サーバー版を採用: この端末の版は復旧用に端末内へ退避してから置き換えます。<br>・この端末の版で上書き: サーバーの旧版は履歴として残り、新しい版として送信されます。</div>
-  <button class="btn sec" id="adopt" onclick="adopt('${esc(pid)}')">サーバー版を採用 (この端末の版は退避)</button>
-  <button class="btn" id="override" onclick="overrideSrv('${esc(pid)}')">この端末の版で上書き送信の準備</button>`;
+  <button class="btn sec" id="adopt" type="button" data-act="adopt" data-pid="${attrId(pid)}">サーバー版を採用 (この端末の版は退避)</button>
+  <button class="btn" id="override" type="button" data-act="override" data-pid="${attrId(pid)}">この端末の版で上書き送信の準備</button>`;
 }
 async function adopt(pid){await act(async()=>{await sync.adoptServer(pid);S.projDicts=await db.all("projects");return null},"サーバー版を採用しました(この端末の旧版は退避済み)")}
 async function overrideSrv(pid){await act(async()=>{await sync.rebaseForOverwrite(pid);return null},"上書き準備ができました")}
@@ -317,8 +324,39 @@ async function pollNet(){
   $("#hdr").innerHTML=header();   // header only: never wipe a form the user is typing in
   if(before!==JSON.stringify([S.online,S.devAuth,S.ready.sw,S.ready.py,S.ready.persist])&&S.tab==="sync")render();
 }
+function onUIClick(ev){
+  const btn=ev.target.closest("[data-act]");
+  if(!btn||btn.disabled)return;
+  const name=btn.dataset.act;
+  try{
+    if(name==="tab")return go(needId(btn.dataset.tab,"tab"));
+    if(name==="create-project")return createProject();
+    if(name==="open-project")return selectProject(needId(btn.dataset.open,"project_id"));
+    if(name==="catalog-sample")return act(()=>api("/api/catalog/sample",{}),"合成サンプルを読み込みました");
+    if(name==="add-catalog")return addCatalog();
+    if(name==="add-object")return addObject();
+    if(name==="place")return place(btn.dataset.obj,btn);
+    if(name==="measure")return measure(btn.dataset.obj,btn.dataset.key,btn);
+    if(name==="upload")return upload(btn.dataset.obj,btn);
+    if(name==="annot")return annot(btn.dataset.obj,btn.dataset.key,btn);
+    if(name==="submit-review")return act(()=>api(`/api/projects/${S.cur}/submit_review`,{}),"レビューに提出しました");
+    if(name==="approve")return approve();
+    if(name==="export")return act(()=>api(`/api/projects/${S.cur}/export`,{}),"出力しました");
+    if(name==="request-persist")return requestPersist();
+    if(name==="dev-login")return devLogin();
+    if(name==="fetch-catalog")return fetchCatalog();
+    if(name==="send")return doSend(needId(btn.dataset.send,"project_id"));
+    if(name==="show-diff")return showDiff(needId(btn.dataset.pid,"project_id"));
+    if(name==="adopt")return adopt(needId(btn.dataset.pid,"project_id"));
+    if(name==="override")return overrideSrv(needId(btn.dataset.pid,"project_id"));
+    if(name==="backup-export")return exportBackup();
+    if(name==="backup-import")return importBackup();
+  }catch(e){S.err=e.message;S.msg=null;render()}
+}
 async function init(){
-  Object.assign(window,{act,api,go,selectProject,createProject,addCatalog,addObject,place,measure,upload,annot,approve,doSend,showDiff,adopt,overrideSrv,devLogin,fetchCatalog,requestPersist,exportBackup,importBackup,__S:S,__db:db});
+  // Test hooks only. No inline onclick; UI uses data-* + event delegation (F-1).
+  Object.assign(window,{act,api,go,selectProject,createProject,addCatalog,addObject,place,measure,upload,annot,approve,doSend,showDiff,adopt,overrideSrv,devLogin,fetchCatalog,requestPersist,exportBackup,importBackup,needId,ID_RE,__S:S,__db:db});
+  document.addEventListener("click",onUIClick);
   render();
   if("serviceWorker" in navigator){try{await navigator.serviceWorker.register("/sw.js")}catch(e){S.err="Service Worker登録失敗: "+e.message}}
   try{await bridge.load();S.ready.py=true}catch(e){S.err=e.message}

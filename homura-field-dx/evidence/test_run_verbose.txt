@@ -20,10 +20,25 @@ test_kind_distinguished_in_outputs (test_core.ApprovalBinding.test_kind_distingu
 test_persistence_roundtrip (test_core.ApprovalBinding.test_persistence_roundtrip) ... ok
 test_stale_version_or_hash_refused (test_core.ApprovalBinding.test_stale_version_or_hash_refused) ... ok
 test_unknown_kind (test_core.ApprovalBinding.test_unknown_kind) ... ok
+test_both_omitted_rejects (test_core.ApprovalBindingRequired.test_both_omitted_rejects) ... ok
+test_correct_version_hash_passes (test_core.ApprovalBindingRequired.test_correct_version_hash_passes) ... ok
+test_hash_omitted_rejects (test_core.ApprovalBindingRequired.test_hash_omitted_rejects) ... ok
+test_post_approval_snapshot_change_invalidates (test_core.ApprovalBindingRequired.test_post_approval_snapshot_change_invalidates) ... ok
+test_version_omitted_rejects (test_core.ApprovalBindingRequired.test_version_omitted_rejects) ... ok
+test_wrong_hash_rejects (test_core.ApprovalBindingRequired.test_wrong_hash_rejects) ... ok
+test_wrong_version_rejects (test_core.ApprovalBindingRequired.test_wrong_version_rejects) ... ok
+test_engine_annotate_rejects_bad_keys (test_core.CatalogKeyInjection.test_engine_annotate_rejects_bad_keys) ... ok
+test_engine_approve_requires_version_hash (test_core.CatalogKeyInjection.test_engine_approve_requires_version_hash) ... ok
+test_engine_measure_rejects_bad_keys (test_core.CatalogKeyInjection.test_engine_measure_rejects_bad_keys) ... ok
+test_publish_definition_rejects_bad_dimension_key (test_core.CatalogKeyInjection.test_publish_definition_rejects_bad_dimension_key) ... ok
 test_client_can_add_definition_but_bad_ones_rejected (test_core.Catalog_.test_client_can_add_definition_but_bad_ones_rejected) ... ok
 test_published_version_immutable_and_unknown (test_core.Catalog_.test_published_version_immutable_and_unknown) ... ok
 test_save_load_roundtrip (test_core.Catalog_.test_save_load_roundtrip) ... ok
 test_version_pinning_survives_catalog_update (test_core.Catalog_.test_version_pinning_survives_catalog_update) ... ok
+test_complete_valid_project_still_approves (test_core.EmptyProjectApproval.test_complete_valid_project_still_approves) ... ok
+test_empty_project_rejects (test_core.EmptyProjectApproval.test_empty_project_rejects) ... ok
+test_required_data_missing_rejects_review (test_core.EmptyProjectApproval.test_required_data_missing_rejects_review) ... ok
+test_unchecked_without_waiver_rejects (test_core.EmptyProjectApproval.test_unchecked_without_waiver_rejects) ... ok
 test_spec_source_not_overwritten_by_measurement_source (test_core.EngineView.test_spec_source_not_overwritten_by_measurement_source) ... ok
 test_base_case_pass (test_core.Interference.test_base_case_pass) ... ok
 test_no_service_space_defined_is_unchecked_not_pass (test_core.Interference.test_no_service_space_defined_is_unchecked_not_pass) ... ok
@@ -58,6 +73,6 @@ test_space_without_basis_rejected (test_interference_cases.Cases.test_space_with
 test_table (test_interference_cases.Cases.test_table) ... ok
 
 ----------------------------------------------------------------------
-Ran 58 tests in 0.040s
+Ran 73 tests in 0.032s
 
 OK

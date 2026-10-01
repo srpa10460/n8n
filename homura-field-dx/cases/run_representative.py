@@ -10,7 +10,8 @@ out = Path(sys.argv[1] if len(sys.argv) > 1 else "evidence/case1")
 p = build_project()
 export_all(p, out / "preview")            # unapproved -> marked
 p.submit_for_review()
-a = p.approve("Daiki Isa (SIMULATED approval for dev test; not a real review)")
+a = p.approve("Daiki Isa (SIMULATED approval for dev test; not a real review)",
+              expect_version=p.data_version, expect_hash=p.content_hash())
 export_all(p, out / "approved")
 s = derive_scene(p, "S-0001")
 s.explode_object("O-WCB", "0", "0", "300")

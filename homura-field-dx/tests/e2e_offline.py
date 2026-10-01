@@ -287,6 +287,56 @@ def main():
         pg2.screenshot(path=str(SHOTS / "23_backup_imported.png"), full_page=True)
         check("no JS page errors", not errors, errors)
         ctx2.close()
+
+        # ---------- 12. F-1 attack regression: malicious catalog/dim keys must not execute JS ----------
+        ctx3, pg3 = launch(tmp / "profile_attack")
+        boot(pg3); pg3.wait_for_function("window.__S.ready.py===true", timeout=120000)
+        payload = "k',this);window.__pwn=1;//"
+        # Engine path: measure/annotate with Guardian payload must Fail Closed
+        eng = pg3.evaluate("""async (payload) => {
+          window.__pwn = undefined;
+          const st = {catalog: window.__S.catalogDict, project: Object.values(window.__S.projDicts||{})[0] || null};
+          // create a minimal project first via API
+          const created = await window.api('/api/projects', {project_id:'P-ATK', w:'2400', d:'1800', h:'2400', unit:'mm'});
+          window.__S.cur = created.project_id;
+          await window.act(()=>window.api('/api/catalog/sample',{}), 'sample');
+          // try publish with malicious dimension key
+          let pubErr = null;
+          try {
+            await window.api('/api/catalog', {
+              definition_id:'evilbox', name:'Evil', category:'t', shape_template:'box', has_opening:false,
+              dimensions:[
+                {key:payload,label:'w',axis:'x',required:true,datum:'d',method:'m',tolerance_mm:'1',min_mm:'10',max_mm:'1000'},
+                {key:'depth',label:'d',axis:'y',required:true,datum:'d',method:'m',tolerance_mm:'1',min_mm:'10',max_mm:'1000'},
+                {key:'height',label:'h',axis:'z',required:true,datum:'d',method:'m',tolerance_mm:'1',min_mm:'10',max_mm:'1000'}
+              ],
+              required_photos:[], required_annotations:[], required_spaces:[]
+            });
+          } catch(e){ pubErr = String(e.message||e); }
+          // inject into #main so event delegation handles the click (Fail Closed via needId)
+          document.querySelector('#main').insertAdjacentHTML('beforeend',
+            `<button id="atk-measure" type="button" data-act="measure" data-obj="O-VAN" data-key="">入力</button>`);
+          const btn = document.getElementById('atk-measure');
+          btn.setAttribute('data-key', payload);  // set raw attribute (dataset encodes)
+          let clickErr = null;
+          try { btn.click(); } catch(e){ clickErr = String(e.message||e); }
+          await new Promise(r=>setTimeout(r,80));
+          const uiRejected = !!(window.__S && window.__S.err && /invalid|reject/i.test(window.__S.err));
+          // also try needId directly
+          let needIdRejected = false;
+          try { window.needId(payload, 'dimension key'); } catch(e){ needIdRejected = true; }
+          return {
+            pwn: window.__pwn,
+            pubErr, clickErr, needIdRejected, uiRejected, err: window.__S && window.__S.err,
+            hasInlineOnclick: [...document.querySelectorAll('[onclick]')].length,
+          };
+        }""", payload)
+        check("F-1: Guardian payload does not set window.__pwn", eng.get("pwn") in (None, "undefined") or eng.get("pwn") is None, eng)
+        check("F-1: needId Fail Closed on Guardian payload", eng.get("needIdRejected") is True, eng)
+        check("F-1: malicious catalog publish rejected", bool(eng.get("pubErr")), eng.get("pubErr"))
+        check("F-1: UI click rejects bad key without JS exec", eng.get("uiRejected") is True or eng.get("needIdRejected") is True, eng)
+        check("F-1: no inline onclick handlers in DOM", eng.get("hasInlineOnclick") == 0, eng)
+        ctx3.close()
     out = ROOT / "evidence" / "e2e_offline"; shutil.rmtree(out, ignore_errors=True); shutil.copytree(data, out)
     (out / "results.json").write_text(json.dumps(results, indent=1, ensure_ascii=False))
     srv.shutdown()

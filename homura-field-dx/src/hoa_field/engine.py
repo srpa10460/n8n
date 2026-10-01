@@ -132,18 +132,22 @@ def call(op: str, state: dict, payload: dict | None = None) -> dict:
         changed_catalog = True
     elif op == "add_instance":
         oid = need_id(payload.get("object_id"), "object_id")
+        need_id(payload.get("definition_id"), "definition_id")
         if oid in need().instances:
             raise EngineError("object exists")
         p.add_instance(oid, payload["definition_id"], payload.get("label") or oid)
         changed_project = True
     elif op == "measure":
-        need().set_measurement(payload["object_id"], payload["key"],
+        oid = need_id(payload.get("object_id"), "object_id")
+        key = need_id(payload.get("key"), "dimension key")
+        need().set_measurement(oid, key,
                                f"{payload['value']} {payload.get('unit', 'mm')}".strip(),
                                Source(payload.get("source", "MEASURED")), by=payload.get("by", ""))
         changed_project = True
     elif op == "place":
+        oid = need_id(payload.get("object_id"), "object_id")
         u = payload.get("unit", "mm")
-        need().place(payload["object_id"], f"{payload['x']} {u}", f"{payload['y']} {u}",
+        need().place(oid, f"{payload['x']} {u}", f"{payload['y']} {u}",
                      f"{payload.get('z', 0)} {u}", int(payload.get("rotation", 0)))
         changed_project = True
     elif op == "photo_check":
@@ -151,13 +155,16 @@ def call(op: str, state: dict, payload: dict | None = None) -> dict:
         data = _decode(payload)
         result.update(_photo_meta(data, payload))
     elif op == "add_photo":
+        oid = need_id(payload.get("object_id"), "object_id")
+        need_id(payload.get("tag"), "photo tag")
         data = _decode(payload)
         meta = _photo_meta(data, payload)
-        need().add_photo(payload["object_id"], meta["asset_id"], payload["tag"], meta["meta"])
+        need().add_photo(oid, meta["asset_id"], payload["tag"], meta["meta"])
         result.update(meta)
         changed_project = True
     elif op == "annotate":
-        need().annotate(payload["object_id"], need_id(payload["key"], "annotation key"),
+        oid = need_id(payload.get("object_id"), "object_id")
+        need().annotate(oid, need_id(payload.get("key"), "annotation key"),
                         str(payload.get("text", ""))[:2000])
         changed_project = True
     elif op == "submit_review":
@@ -168,6 +175,11 @@ def call(op: str, state: dict, payload: dict | None = None) -> dict:
         missing = [c for c in REQUIRED_CONFIRMATIONS if c not in conf]
         if missing:
             raise EngineError("all review confirmations must be ticked: " + ",".join(missing))
+        # Fail Closed at Engine layer: omit / mismatch of version+hash must reject (do not trust UI).
+        if "expect_version" not in payload or payload.get("expect_version") is None:
+            raise EngineError("expect_version required (version-bound approval)")
+        if "expect_hash" not in payload or payload.get("expect_hash") in (None, ""):
+            raise EngineError("expect_hash required (hash-bound approval)")
         need().approve(str(payload.get("approver", "")), payload.get("waivers") or {},
                        payload.get("kind", "DEV_SIMULATED"), payload.get("expect_version"),
                        payload.get("expect_hash"), conf)
